@@ -120,5 +120,3 @@ refresh_sec = st.slider("Refresh every (sec)", 10, 120, 30)
 # Toggle to turn automatic refreshing on/off
 auto_refresh = st.toggle("Enable auto-refresh", value=False)
 
-# Show current refresh time
-st.caption(f"Last refreshed at: {df['time'].strftime('%H:%M:%S')}")
