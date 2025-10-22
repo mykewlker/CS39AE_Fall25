@@ -52,7 +52,7 @@ def get_weather():
         
         # Rename columns for clearer labels in charts
         df.rename(columns={
-            'temperature_2m': 'Temperature (Â°C)',
+            'temperature_2m': 'Temperature (°C)',
             'wind_speed_10m': 'Wind Speed (km/h)'
         }, inplace=True)
                 
@@ -79,10 +79,10 @@ if not weather_df.empty:
     col1, col2 = st.columns(2)
     
     # Get the first row of data
-    current_temp = weather_df.iloc[0]['Temperature (Â°C)']
+    current_temp = weather_df.iloc[0]['Temperature (°C)']
     current_wind = weather_df.iloc[0]['Wind Speed (km/h)']
     
-    col1.metric("Temperature", f"{current_temp} Â°C")
+    col1.metric("Temperature", f"{current_temp} °C")
     col2.metric("Wind Speed", f"{current_wind} km/h")
 
     # --- Create the Temperature Line Chart ---
@@ -92,11 +92,11 @@ if not weather_df.empty:
     fig_temp = px.line(
         weather_df,
         x='time',
-        y='Temperature (Â°C)',
+        y='Temperature (°C)',
         title='Temperature Over Time',
         markers=True  # Add markers to each data point
     )
-    fig_temp.update_layout(xaxis_title="Time", yaxis_title="Temperature (Â°C)")
+    fig_temp.update_layout(xaxis_title="Time", yaxis_title="Temperature (°C)")
     st.plotly_chart(fig_temp, use_container_width=True)
 
     # --- Create the Wind Speed Area Chart ---
