@@ -9,7 +9,7 @@ st.set_page_config(
     page_icon="ð©ï¸"
 )
 
-st.title("ð©ï¸ Weather Forecast")
+st.title("Weather Forecast")
 st.write("This page shows the hourly temperature and wind speed forecast for Denver, CO.")
 
 # --- API Setup (Denver) ---
