@@ -22,3 +22,12 @@ COINS = ["bitcoin", "ethereum"]
 VS = "usd"
 HEADERS = {"User-Agent": "msudenver-dataviz-class/1.0", "Accept": "application/json"}
 
+def build_url(ids):
+    return f"https://api.coingecko.com/api/v3/simple/price?ids={','.join(ids)}&vs_currencies={VS}"
+
+API_URL = build_url(COINS)
+
+# Tiny sample to keep the demo working even if the API is rate-limiting
+SAMPLE_DF = pd.DataFrame(
+    [{"coin": "bitcoin", VS: 68000}, {"coin": "ethereum", VS: 3500}]
+)
