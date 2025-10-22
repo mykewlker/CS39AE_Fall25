@@ -63,18 +63,3 @@ st.caption(f"Last refreshed at: {time.strftime('%H:%M:%S')}")
 
 st.subheader("Prices")
 df, err = fetch_prices(API_URL)
-
-if err:
-    st.warning(f"{err}\nShowing sample data so the demo continues.")
-    df = SAMPLE_DF.copy()
-
-st.dataframe(df, use_container_width=True)
-
-fig = px.bar(df, x="coin", y=VS, title=f"Current price ({VS.upper()})")
-st.plotly_chart(fig, use_container_width=True)
-
-# If auto-refresh is ON, wait and rerun the app
-if auto_refresh:
-    time.sleep(refresh_sec)
-  fetch_prices.clear()
-    st.rerun()
