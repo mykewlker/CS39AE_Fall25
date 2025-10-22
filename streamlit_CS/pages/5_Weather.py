@@ -20,6 +20,15 @@ lat, lon = 39.7392, -104.9903  # Denver
 # 'forecast_days=3' will give us 3 days of hourly data.
 wurl = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,wind_speed_10m&forecast_days=3"
 
+# --- Auto Refresh Controls ---
+st.subheader("🔁 Auto Refresh Settings")
+
+# Let user choose how often to refresh (in seconds)
+refresh_sec = st.slider("Refresh every (sec)", 10, 120, 30)
+
+# Toggle to turn automatic refreshing on/off
+auto_refresh = st.toggle("Enable auto-refresh", value=False)
+
 
 # --- Data Fetching Function ---
 @st.cache_data(ttl=600)  # Cache data for 10 minutes (600 seconds)
@@ -111,12 +120,4 @@ else:
     # This message will show if the get_weather() function failed
     st.warning("Could not retrieve weather data. Please try again later.")
 
-# --- Auto Refresh Controls ---
-st.subheader("🔁 Auto Refresh Settings")
-
-# Let user choose how often to refresh (in seconds)
-refresh_sec = st.slider("Refresh every (sec)", 10, 120, 30)
-
-# Toggle to turn automatic refreshing on/off
-auto_refresh = st.toggle("Enable auto-refresh", value=False)
 
