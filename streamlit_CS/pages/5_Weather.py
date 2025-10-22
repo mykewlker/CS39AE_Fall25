@@ -110,3 +110,15 @@ if not weather_df.empty:
 else:
     # This message will show if the get_weather() function failed
     st.warning("Could not retrieve weather data. Please try again later.")
+
+# --- Auto Refresh Controls ---
+st.subheader("🔁 Auto Refresh Settings")
+
+# Let user choose how often to refresh (in seconds)
+refresh_sec = st.slider("Refresh every (sec)", 10, 120, 30)
+
+# Toggle to turn automatic refreshing on/off
+auto_refresh = st.toggle("Enable auto-refresh", value=False)
+
+# Show current refresh time
+st.caption(f"Last refreshed at: {time.strftime('%H:%M:%S')}")
