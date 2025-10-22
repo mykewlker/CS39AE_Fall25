@@ -15,7 +15,7 @@ st.write("This page reads data from `data/pie_demo.csv` and displays it as a pie
 # --- Define Data Path ---
 # This relative path works whether the script is in the root or in a 'pages' folder,
 # as long as the 'data' folder is in the root.
-DATA_FILE_PATH = "data/pie_demo.csv"
+DATA_FILE_PATH = "streamlit_CS/data/pie_demo.csv"
 
 # --- Load and Display Data ---
 try:
@@ -62,3 +62,4 @@ except FileNotFoundError:
     """)
 except Exception as e:
     st.error(f"An error occurred while loading or processing the data: {e}")
+
