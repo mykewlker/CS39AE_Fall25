@@ -10,9 +10,7 @@ st.set_page_config(layout="wide")
 # --- Data Loading ---
 # Player stats URL
 DATA_URL = 'https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_2023.csv'
-# NEW: Schedule data URL (from the nflfastR data repo - third time's the charm!)
-SCHEDULE_DATA_URL = 'https://raw.githubusercontent.com/nflfastR/nflfastR-data/master/schedules/sched_2023.csv'
-
+# SCHEDULE_DATA_URL has been removed
 
 @st.cache_data  # Cache the data so it doesn't re-load on every interaction
 def load_data(url):
@@ -70,25 +68,18 @@ def load_data(url):
         st.error(f"Error loading data: {e}")
         return None
 
-@st.cache_data
-def load_schedule_data(url):
-    """
-    Loads the 2023 season schedule data from the specified nflverse URL.
-    """
-    try:
-        schedule = pd.read_csv(url)
-        # We only care about regular season games
-        schedule = schedule[schedule['game_type'] == 'REG']
-        return schedule
-    except Exception as e:
-        st.error(f"Error loading schedule data: {e}")
-        return None
+# The load_schedule_data function has been removed
 
-# Load both dataframes
+# Load the main dataframe
 df = load_data(DATA_URL)
-schedule_df = load_schedule_data(SCHEDULE_DATA_URL)
+# schedule_df has been removed
 
 if df is not None:
+    # --- Pre-calculate season totals for rankings ---
+    # We group by Player and Position to get total points, then rank them within their position
+    season_totals_df = df.groupby(['Player', 'Position'])['TotalFantasyPoints'].sum().reset_index()
+    season_totals_df['Pos. Rank'] = season_totals_df.groupby('Position')['TotalFantasyPoints'].rank(ascending=False, method='min').astype(int)
+
     # --- Main Page Title ---
     st.title("Fantasy Football Dashboard")
 
@@ -104,9 +95,6 @@ if df is not None:
 
     # --- Player Stats (Dynamic) ---
     st.sidebar.header("Player Season Stats (2023)")
-    
-    # We need to declare 'team' here so we can use it for the schedule
-    team = None 
     
     if selected_player:
         # Filter the dataframe for the selected player
@@ -146,61 +134,34 @@ if df is not None:
                 
             if 'receiving_yards' in season_stats and season_stats['receiving_yards'] > 0:
                 st.sidebar.metric("Receiving Yards", f"{int(season_stats['receiving_yards'])}")
-        
+            
+            # --- NEW: Season Snapshot Section ---
+            st.sidebar.markdown("---")
+            st.sidebar.subheader("Season Snapshot")
+            
+            # Get rank info from our pre-calculated dataframe
+            player_rank_info = season_totals_df[season_totals_df['Player'] == selected_player]
+            positional_rank = player_rank_info['Pos. Rank'].iloc[0]
+            
+            # Get games played
+            games_played = len(player_data)
+            
+            # Calculate average points
+            avg_points = season_stats.get('TotalFantasyPoints', 0) / games_played if games_played > 0 else 0
+            
+            # Display snapshot metrics
+            r_col1, r_col2 = st.sidebar.columns(2)
+            r_col1.metric("Positional Rank", f"#{positional_rank} {position}")
+            r_col2.metric("Games Played", f"{games_played}")
+            
+            st.sidebar.metric("Avg Points / Game", f"{avg_points:.2f}")
+            # --- End of New Section ---
+
         else:
             st.sidebar.error("Could not find stats for this player.")
     
     # --- Game Schedule (Dynamic) ---
-    st.sidebar.header("Team Schedule (2023)")
-    if team and schedule_df is not None:
-        # Find all games (home or away) for the selected player's team
-        team_schedule = schedule_df[
-            (schedule_df['home_team'] == team) | (schedule_df['away_team'] == team)
-        ].sort_values(by='week')
-        
-        if not team_schedule.empty:
-            # Create Opponent column
-            team_schedule['Opponent'] = np.where(
-                team_schedule['home_team'] == team, 
-                "vs " + team_schedule['away_team'], 
-                "@ " + team_schedule['home_team']
-            )
-            
-            # Create Result column
-            team_schedule['Result'] = np.where(
-                team_schedule['result'] > 0, 
-                f"W {team_schedule['home_score']}-{team_schedule['away_score']}", 
-                np.where(
-                    team_schedule['result'] < 0,
-                    f"L {team_schedule['home_score']}-{team_schedule['away_score']}",
-                    "T" # For ties, though rare
-                )
-            )
-            # Fix result string for away team
-            team_schedule['Result'] = np.where(
-                (team_schedule['away_team'] == team) & (team_schedule['result'] < 0),
-                f"W {team_schedule['away_score']}-{team_schedule['home_score']}",
-                np.where(
-                    (team_schedule['away_team'] == team) & (team_schedule['result'] > 0),
-                    f"L {team_schedule['away_score']}-{team_schedule['home_score']}",
-                    team_schedule['Result'] # Keep W/L string from home team logic
-                )
-            )
-            
-            
-            # Select and display
-            display_cols = ['week', 'Opponent', 'Result']
-            st.sidebar.dataframe(
-                team_schedule[display_cols].set_index('week'), 
-                use_container_width=True
-            )
-        else:
-            st.sidebar.warning(f"No schedule data found for team: {team}")
-    
-    elif not team:
-        st.sidebar.info("Select a player to see their team's schedule.")
-    else:
-        st.sidebar.error("Schedule data could not be loaded.")
+    # This entire section has been removed.
 
 
     # --- Main Content Area ---
