@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt  # Import the altair library
 
 # --- Page Setup ---
 # Set the page configuration to be wide
@@ -166,12 +167,31 @@ if df is not None:
             
             st.dataframe(weekly_display_df, use_container_width=True)
             
-            # --- ADDED: Weekly Points Bar Chart ---
+            # --- UPDATED: Weekly Points Bar Chart ---
             st.subheader("Weekly Points Chart")
-            # We already have the data in weekly_display_df, let's just plot the points
-            # We select just the column we want to plot. The index ('week') is used for the x-axis.
-            st.bar_chart(weekly_display_df['Fantasy Points (PPR)'])
-            # --- End of Added Section ---
+            
+            # We need to reset the index so 'week' becomes a column for Altair
+            # We also need 'Opponent' for the tooltip, so let's grab it
+            chart_data = weekly_display_df.reset_index()[['week', 'Fantasy Points (PPR)', 'Opponent']]
+
+            # Create the Altair chart
+            chart = alt.Chart(chart_data).mark_bar().encode(
+                # Use 'week:O' to treat the week number as an Ordinal (categorical) value
+                # This fixes the x-axis to only show weeks with data.
+                # We also add a title for the axis.
+                x=alt.X('week:O', title='Week', axis=alt.Axis(labelAngle=0)), # labelAngle=0 keeps week numbers horizontal
+                
+                # Use 'Fantasy Points (PPR):Q' to treat the points as a Quantitative value
+                # And add a title for the y-axis.
+                y=alt.Y('Fantasy Points (PPR):Q', title='Fantasy Points (PPR)'),
+                
+                # Add tooltips for interactivity
+                tooltip=['week', 'Opponent', 'Fantasy Points (PPR)']
+            ).interactive() # Make the chart interactive (zoom/pan)
+            
+            # Display the chart
+            st.altair_chart(chart, use_container_width=True)
+            # --- End of Updated Section ---
             
         # Dynamic "Player vs Player" section
         st.subheader("Player vs. Player / Future Matchups")
