@@ -90,7 +90,7 @@ if df is not None:
         players = sorted(df['Player'].unique())
         selected_player = st.sidebar.selectbox("Select a Player", players)
     except Exception as e:
-        st.sidebar.error(f"Could not load player list: {e}")
+# ... existingG code ...
         selected_player = None
 
     # --- Player Stats (Dynamic) ---
@@ -168,90 +168,89 @@ if df is not None:
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        # --- NEW: Tabbed Interface for Main Content ---
-        tab_chart, tab_stats, tab_pvp = st.tabs(["Weekly Chart", "Weekly Stats Table", "Player vs. Player"])
-
-        with tab_chart:
-            # --- Weekly Points Bar Chart ---
-            st.subheader("Weekly Points Chart")
-            if selected_player:
-                player_data = df[df['Player'] == selected_player]
-                
-                # Define columns needed for the chart
-                chart_cols = ['week', 'TotalFantasyPoints', 'opponent_team']
-                existing_chart_cols = [col for col in chart_cols if col in player_data.columns]
-                
-                weekly_display_df = player_data[existing_chart_cols].sort_values(by='week')
-                
-                # Rename for a cleaner display
-                weekly_display_df = weekly_display_df.rename(columns={
-                    'opponent_team': 'Opponent',
-                    'TotalFantasyPoints': 'Fantasy Points (PPR)'
-                })
-
-                # We need to reset the index so 'week' becomes a column for Altair
-                chart_data = weekly_display_df.reset_index()[['week', 'Fantasy Points (PPR)', 'Opponent']]
-
-                # Create the Altair chart
-                chart = alt.Chart(chart_data).mark_bar().encode(
-                    # Use 'week:O' to treat the week number as an Ordinal (categorical) value
-                    x=alt.X('week:O', title='Week', axis=alt.Axis(labelAngle=0)),
-                    
-                    # Use 'Fantasy Points (PPR):Q' to treat the points as a Quantitative value
-                    y=alt.Y('Fantasy Points (PPR):Q', title='Fantasy Points (PPR)'),
-                    
-                    # Add tooltips for interactivity
-                    tooltip=['week', 'Opponent', 'Fantasy Points (PPR)']
-                ).interactive() # Make the chart interactive (zoom/pan)
-                
-                # Display the chart
-                st.altair_chart(chart, use_container_width=True)
-            else:
-                st.info("Select a player from the sidebar to see their weekly chart.")
-
-        with tab_stats:
-            # --- Weekly Performance (Dynamic) ---
-            st.subheader(f"Weekly Performance (2023)")
-            if selected_player:
-                player_data = df[df['Player'] == selected_player]
-                
-                # Define columns to display for the weekly log
-                cols_to_show = [
-                    'week', 
-                    'opponent_team', 
-                    'TotalFantasyPoints', 
-                    'passing_yards', 
-                    'passing_tds', 
-                    'rushing_yards', 
-                    'rushing_tds', 
-                    'receiving_yards', 
-                    'receiving_tds'
-                ]
-                
-                # Filter for columns that actually exist in our dataframe
-                existing_cols_to_show = [col for col in cols_to_show if col in player_data.columns]
-                
-                weekly_display_df = player_data[existing_cols_to_show].sort_values(by='week').set_index('week')
-                
-                # Rename for a cleaner display
-                weekly_display_df = weekly_display_df.rename(columns={
-                    'opponent_team': 'Opponent',
-                    'TotalFantasyPoints': 'Fantasy Points (PPR)'
-                })
-                
-                st.dataframe(weekly_display_df, use_container_width=True)
-            else:
-                st.info("Select a player from the sidebar to see their weekly stats.")
-
-        with tab_pvp:
-            # --- Dynamic "Player vs Player" section ---
-            st.subheader("Player vs. Player Comparison (2023)")
+        # --- REVERTED: Tabbed Interface for Main Content ---
+        # The tabs have been removed. We are stacking the content again, matching the sketch.
+        
+        if selected_player:
+            player_data = df[df['Player'] == selected_player]
             
-            # Add a selectbox for the second player
-            # Use index 1 to select the second player in the list as a default
-            selected_player_2 = st.selectbox("Select a comparison player", players, index=1)
+            # --- Weekly Points Bar Chart ---
+            # We'll put the chart *above* the table
+            st.subheader("Weekly Points Chart")
+            
+            # Define columns needed for the chart
+            chart_cols = ['week', 'TotalFantasyPoints', 'opponent_team']
+            existing_chart_cols = [col for col in chart_cols if col in player_data.columns]
+            
+            weekly_chart_df = player_data[existing_chart_cols].sort_values(by='week')
+            
+            # Rename for a cleaner display
+            weekly_chart_df = weekly_chart_df.rename(columns={
+                'opponent_team': 'Opponent',
+                'TotalFantasyPoints': 'Fantasy Points (PPR)'
+            })
 
-            if selected_player and selected_player_2:
+            # We need to reset the index so 'week' becomes a column for Altair
+            chart_data = weekly_chart_df.reset_index()[['week', 'Fantasy Points (PPR)', 'Opponent']]
+
+            # Create the Altair chart
+            chart = alt.Chart(chart_data).mark_bar().encode(
+                # Use 'week:O' to treat the week number as an Ordinal (categorical) value
+                x=alt.X('week:O', title='Week', axis=alt.Axis(labelAngle=0)),
+                
+                # Use 'Fantasy Points (PPR):Q' to treat the points as a Quantitative value
+                y=alt.Y('Fantasy Points (PPR):Q', title='Fantasy Points (PPR)'),
+                
+                # Add tooltips for interactivity
+                tooltip=['week', 'Opponent', 'Fantasy Points (PPR)']
+            ).interactive() # Make the chart interactive (zoom/pan)
+            
+            # Display the chart
+            st.altair_chart(chart, use_container_width=True)
+
+            # --- Weekly Stats Table ---
+            st.subheader(f"Weekly Stats Table (2023)")
+            
+            # Define columns to display for the weekly log
+            cols_to_show = [
+                'week', 
+                'opponent_team', 
+                'TotalFantasyPoints', 
+                'passing_yards', 
+                'passing_tds', 
+                'rushing_yards', 
+                'rushing_tds', 
+                'receiving_yards', 
+                'receiving_tds'
+            ]
+            
+            # Filter for columns that actually exist in our dataframe
+            existing_cols_to_show = [col for col in cols_to_show if col in player_data.columns]
+            
+            weekly_display_df = player_data[existing_cols_to_show].sort_values(by='week').set_index('week')
+            
+            # Rename for a cleaner display
+            weekly_display_df = weekly_display_df.rename(columns={
+                'opponent_team': 'Opponent',
+                'TotalFantasyPoints': 'Fantasy Points (PPR)'
+            })
+            
+            # --- MODIFICATION: Add a fixed height to the dataframe ---
+            st.dataframe(weekly_display_df, use_container_width=True, height=300) # This makes the table scrollable
+        
+        else:
+             st.info("Select a player from the sidebar to see their weekly stats and chart.")
+
+
+        # --- Dynamic "Player vs Player" section ---
+        # This section is now stacked below the weekly performance
+        st.subheader("Player vs. Player Comparison (2023)")
+        
+        # Add a selectbox for the second player
+        # Use index 1 to select the second player in the list as a default
+        selected_player_2 = st.selectbox("Select a comparison player", players, index=1)
+
+        if selected_player and selected_player_2:
                 # Create two columns for the side-by-side comparison
                 comp_col1, comp_col2 = st.columns(2)
                 
@@ -303,7 +302,7 @@ if df is not None:
                     else:
                         st.error(f"No data for {selected_player_2}")
             
-            elif not selected_player:
+        elif not selected_player:
                 st.info("Select a player from the sidebar to enable comparison.")
         
         # --- End of Player vs Player section ---
