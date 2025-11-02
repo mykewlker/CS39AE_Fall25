@@ -10,7 +10,6 @@ st.set_page_config(layout="wide")
 # --- Data Loading ---
 # Player stats URL
 DATA_URL = 'https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_2023.csv'
-# SCHEDULE_DATA_URL has been removed
 
 @st.cache_data  # Cache the data so it doesn't re-load on every interaction
 def load_data(url):
@@ -68,11 +67,8 @@ def load_data(url):
         st.error(f"Error loading data: {e}")
         return None
 
-# The load_schedule_data function has been removed
-
 # Load the main dataframe
 df = load_data(DATA_URL)
-# schedule_df has been removed
 
 if df is not None:
     # --- Pre-calculate season totals for rankings ---
@@ -90,7 +86,7 @@ if df is not None:
         players = sorted(df['Player'].unique())
         selected_player = st.sidebar.selectbox("Select a Player", players)
     except Exception as e:
-# ... existingG code ...
+        st.sidebar.error(f"Could not load player list: {e}")
         selected_player = None
 
     # --- Player Stats (Dynamic) ---
@@ -135,7 +131,7 @@ if df is not None:
             if 'receiving_yards' in season_stats and season_stats['receiving_yards'] > 0:
                 st.sidebar.metric("Receiving Yards", f"{int(season_stats['receiving_yards'])}")
             
-            # --- NEW: Season Snapshot Section ---
+            # --- Season Snapshot Section ---
             st.sidebar.markdown("---")
             st.sidebar.subheader("Season Snapshot")
             
@@ -155,170 +151,137 @@ if df is not None:
             r_col2.metric("Games Played", f"{games_played}")
             
             st.sidebar.metric("Avg Points / Game", f"{avg_points:.2f}")
-            # --- End of New Section ---
 
         else:
             st.sidebar.error("Could not find stats for this player.")
+
+    # --- Main Content Area (2x2 Grid) ---
     
-    # --- Game Schedule (Dynamic) ---
-    # This entire section has been removed.
+    # Create the two main columns for the grid
+    main_col1, main_col2 = st.columns(2)
 
-
-    # --- Main Content Area ---
-    col1, col2 = st.columns([2, 1])
-
-    with col1:
-        # --- REVERTED: Tabbed Interface for Main Content ---
-        # The tabs have been removed. We are stacking the content again, matching the sketch.
-        
+    with main_col1:
+        # --- Top-Left: Weekly Chart ---
         if selected_player:
             player_data = df[df['Player'] == selected_player]
             
-            # --- Weekly Points Bar Chart ---
-            # We'll put the chart *above* the table
             st.subheader("Weekly Points Chart")
             
-            # Define columns needed for the chart
             chart_cols = ['week', 'TotalFantasyPoints', 'opponent_team']
             existing_chart_cols = [col for col in chart_cols if col in player_data.columns]
-            
             weekly_chart_df = player_data[existing_chart_cols].sort_values(by='week')
             
-            # Rename for a cleaner display
             weekly_chart_df = weekly_chart_df.rename(columns={
                 'opponent_team': 'Opponent',
                 'TotalFantasyPoints': 'Fantasy Points (PPR)'
             })
 
-            # We need to reset the index so 'week' becomes a column for Altair
             chart_data = weekly_chart_df.reset_index()[['week', 'Fantasy Points (PPR)', 'Opponent']]
 
-            # Create the Altair chart
             chart = alt.Chart(chart_data).mark_bar().encode(
-                # Use 'week:O' to treat the week number as an Ordinal (categorical) value
                 x=alt.X('week:O', title='Week', axis=alt.Axis(labelAngle=0)),
-                
-                # Use 'Fantasy Points (PPR):Q' to treat the points as a Quantitative value
                 y=alt.Y('Fantasy Points (PPR):Q', title='Fantasy Points (PPR)'),
-                
-                # Add tooltips for interactivity
                 tooltip=['week', 'Opponent', 'Fantasy Points (PPR)']
-            ).interactive() # Make the chart interactive (zoom/pan)
+            ).interactive()
             
-            # Display the chart
             st.altair_chart(chart, use_container_width=True)
+        
+        else:
+             st.info("Select a player from the sidebar to see their weekly stats and chart.")
 
-            # --- Weekly Stats Table ---
+    with main_col2:
+        # --- Top-Right: Top Fantasy Players ---
+        st.subheader("Top Fantasy Players (2023)")
+        
+        try:
+            # Aggregate points by player and get the top 30
+            player_points = df.groupby('Player')['TotalFantasyPoints'].sum().nlargest(30).reset_index()
+            player_points['TotalFantasyPoints'] = player_points['TotalFantasyPoints'].round(2)
+            player_points.index = player_points.index + 1 # Start index at 1
+            # Give the dataframe a fixed height to make it scrollable
+            st.dataframe(player_points, use_container_width=True, hide_index=True, height=500)
+        except Exception as e:
+            st.error(f"Could not calculate top players: {e}")
+
+    # --- Bottom Row ---
+    # Create two columns for the bottom row
+    bottom_col1, bottom_col2 = st.columns(2)
+
+    with bottom_col1:
+        # --- Bottom-Left: Weekly Stats Table ---
+        if selected_player:
+            player_data = df[df['Player'] == selected_player]
             st.subheader(f"Weekly Stats Table (2023)")
             
-            # Define columns to display for the weekly log
             cols_to_show = [
-                'week', 
-                'opponent_team', 
-                'TotalFantasyPoints', 
-                'passing_yards', 
-                'passing_tds', 
-                'rushing_yards', 
-                'rushing_tds', 
-                'receiving_yards', 
-                'receiving_tds'
+                'week', 'opponent_team', 'TotalFantasyPoints', 'passing_yards', 
+                'passing_tds', 'rushing_yards', 'rushing_tds', 'receiving_yards', 'receiving_tds'
             ]
             
-            # Filter for columns that actually exist in our dataframe
             existing_cols_to_show = [col for col in cols_to_show if col in player_data.columns]
-            
             weekly_display_df = player_data[existing_cols_to_show].sort_values(by='week').set_index('week')
             
-            # Rename for a cleaner display
             weekly_display_df = weekly_display_df.rename(columns={
                 'opponent_team': 'Opponent',
                 'TotalFantasyPoints': 'Fantasy Points (PPR)'
             })
             
-            # --- MODIFICATION: Add a fixed height to the dataframe ---
-            st.dataframe(weekly_display_df, use_container_width=True, height=300) # This makes the table scrollable
+            # Give the dataframe a fixed height
+            st.dataframe(weekly_display_df, use_container_width=True, height=350)
         
         else:
-             st.info("Select a player from the sidebar to see their weekly stats and chart.")
+            st.info("Select a player to see their weekly stats.")
 
-
-        # --- Dynamic "Player vs Player" section ---
-        # This section is now stacked below the weekly performance
+    with bottom_col2:
+        # --- Bottom-Right: Player vs. Player ---
         st.subheader("Player vs. Player Comparison (2023)")
         
-        # Add a selectbox for the second player
-        # Use index 1 to select the second player in the list as a default
         selected_player_2 = st.selectbox("Select a comparison player", players, index=1)
 
         if selected_player and selected_player_2:
-                # Create two columns for the side-by-side comparison
-                comp_col1, comp_col2 = st.columns(2)
-                
-                # --- Player 1 (from sidebar) ---
-                with comp_col1:
-                    player_1_data = df[df['Player'] == selected_player]
-                    
-                    if not player_1_data.empty:
-                        p1_stats = player_1_data.sum(numeric_only=True)
-                        p1_pos = player_1_data['Position'].iloc[0]
-                        p1_team = player_1_data['Team'].iloc[0]
-                        p1_tds = int(p1_stats.get('rushing_tds', 0) + p1_stats.get('receiving_tds', 0) + p1_stats.get('passing_tds', 0))
-
-                        st.markdown(f"#### {selected_player}")
-                        st.write(f"**{p1_pos} | {p1_team}**")
-                        st.divider()
-                        st.metric("Total Points (PPR)", f"{p1_stats.get('TotalFantasyPoints', 0):.2f}")
-                        st.metric("Total TDs", f"{p1_tds}")
-                        if 'passing_yards' in p1_stats and p1_stats['passing_yards'] > 0:
-                            st.metric("Passing Yards", f"{int(p1_stats['passing_yards'])}")
-                        if 'rushing_yards' in p1_stats and p1_stats['rushing_yards'] > 0:
-                            st.metric("Rushing Yards", f"{int(p1_stats['rushing_yards'])}")
-                        if 'receiving_yards' in p1_stats and p1_stats['receiving_yards'] > 0:
-                            st.metric("Receiving Yards", f"{int(p1_stats['receiving_yards'])}")
-                    else:
-                        st.error(f"No data for {selected_player}")
-
-                # --- Player 2 (from new selectbox) ---
-                with comp_col2:
-                    player_2_data = df[df['Player'] == selected_player_2]
-                    
-                    if not player_2_data.empty:
-                        p2_stats = player_2_data.sum(numeric_only=True)
-                        p2_pos = player_2_data['Position'].iloc[0]
-                        p2_team = player_2_data['Team'].iloc[0]
-                        p2_tds = int(p2_stats.get('rushing_tds', 0) + p2_stats.get('receiving_tds', 0) + p2_stats.get('passing_tds', 0))
-
-                        st.markdown(f"#### {selected_player_2}")
-                        st.write(f"**{p2_pos} | {p2_team}**")
-                        st.divider()
-                        st.metric("Total Points (PPR)", f"{p2_stats.get('TotalFantasyPoints', 0):.2f}")
-                        st.metric("Total TDs", f"{p2_tds}")
-                        if 'passing_yards' in p2_stats and p2_stats['passing_yards'] > 0:
-                            st.metric("Passing Yards", f"{int(p2_stats['passing_yards'])}")
-                        if 'rushing_yards' in p2_stats and p2_stats['rushing_yards'] > 0:
-                            st.metric("Rushing Yards", f"{int(p2_stats['rushing_yards'])}")
-                        if 'receiving_yards' in p2_stats and p2_stats['receiving_yards'] > 0:
-                            st.metric("Receiving Yards", f"{int(p2_stats['receiving_yards'])}")
-                    else:
-                        st.error(f"No data for {selected_player_2}")
+            # Create two columns for the side-by-side comparison
+            comp_col1, comp_col2 = st.columns(2)
             
-        elif not selected_player:
-                st.info("Select a player from the sidebar to enable comparison.")
-        
-        # --- End of Player vs Player section ---
+            # --- Player 1 (from sidebar) ---
+            with comp_col1:
+                player_1_data = df[df['Player'] == selected_player]
+                
+                if not player_1_data.empty:
+                    p1_stats = player_1_data.sum(numeric_only=True)
+                    p1_pos = player_1_data['Position'].iloc[0]
+                    p1_team = player_1_data['Team'].iloc[0]
+                    p1_tds = int(p1_stats.get('rushing_tds', 0) + p1_stats.get('receiving_tds', 0) + p1_stats.get('passing_tds', 0))
 
-    with col2:
-        # Static "Top Fantasy Players" section
-        st.subheader("Top Fantasy Players (2023)")
+                    st.markdown(f"#### {selected_player}")
+                    st.write(f"**{p1_pos} | {p1_team}**")
+                    st.divider()
+                    st.metric("Total Points (PPR)", f"{p1_stats.get('TotalFantasyPoints', 0):.2f}")
+                    st.metric("Total TDs", f"{p1_tds}")
+                    
+                else:
+                    st.error(f"No data for {selected_player}")
+
+            # --- Player 2 (from new selectbox) ---
+            with comp_col2:
+                player_2_data = df[df['Player'] == selected_player_2]
+                
+                if not player_2_data.empty:
+                    p2_stats = player_2_data.sum(numeric_only=True)
+                    p2_pos = player_2_data['Position'].iloc[0]
+                    p2_team = player_2_data['Team'].iloc[0]
+                    p2_tds = int(p2_stats.get('rushing_tds', 0) + p2_stats.get('receiving_tds', 0) + p2_stats.get('passing_tds', 0))
+
+                    st.markdown(f"#### {selected_player_2}")
+                    st.write(f"**{p2_pos} | {p2_team}**")
+                    st.divider()
+                    st.metric("Total Points (PPR)", f"{p2_stats.get('TotalFantasyPoints', 0):.2f}")
+                    st.metric("Total TDs", f"{p2_tds}")
+                    
+                else:
+                    st.error(f"No data for {selected_player_2}")
         
-        try:
-            # Aggregate points by player and get the top 15
-            player_points = df.groupby('Player')['TotalFantasyPoints'].sum().nlargest(15).reset_index()
-            player_points['TotalFantasyPoints'] = player_points['TotalFantasyPoints'].round(2)
-            player_points.index = player_points.index + 1 # Start index at 1
-            st.dataframe(player_points, use_container_width=True, hide_index=True)
-        except Exception as e:
-            st.error(f"Could not calculate top players: {e}")
+        elif not selected_player:
+            st.info("Select a player from the sidebar to enable comparison.")
 
 else:
     st.error("Failed to load data. The dashboard cannot be displayed.")
