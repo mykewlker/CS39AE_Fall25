@@ -6,8 +6,8 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # --- Data Loading ---
-# NEW, reliable URL from the nflverse project (2023 weekly data)
-DATA_URL = 'https://raw.githubusercontent.com/nflverse/nflverse-data/main/data/player-stats/player_stats_2023.csv'
+# NEW, more reliable URL from the nflverse *releases* page
+DATA_URL = 'https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_2023.csv'
 
 @st.cache_data  # Cache the data so it doesn't re-load on every interaction
 def load_data(url):
