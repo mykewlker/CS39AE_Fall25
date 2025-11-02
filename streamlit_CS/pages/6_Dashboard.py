@@ -193,10 +193,66 @@ if df is not None:
             st.altair_chart(chart, use_container_width=True)
             # --- End of Updated Section ---
             
-        # Dynamic "Player vs Player" section
-        st.subheader("Player vs. Player / Future Matchups")
-        st.info("In-depth matchup analysis will go here.")
-        # (This is a more advanced feature for a later step)
+        # --- Dynamic "Player vs Player" section ---
+        st.subheader("Player vs. Player Comparison (2023)")
+        
+        # Add a selectbox for the second player
+        # Use index 1 to select the second player in the list as a default
+        selected_player_2 = st.selectbox("Select a comparison player", players, index=1)
+
+        if selected_player and selected_player_2:
+            # Create two columns for the side-by-side comparison
+            comp_col1, comp_col2 = st.columns(2)
+            
+            # --- Player 1 (from sidebar) ---
+            with comp_col1:
+                player_1_data = df[df['Player'] == selected_player]
+                
+                if not player_1_data.empty:
+                    p1_stats = player_1_data.sum(numeric_only=True)
+                    p1_pos = player_1_data['Position'].iloc[0]
+                    p1_team = player_1_data['Team'].iloc[0]
+                    p1_tds = int(p1_stats.get('rushing_tds', 0) + p1_stats.get('receiving_tds', 0) + p1_stats.get('passing_tds', 0))
+
+                    st.markdown(f"#### {selected_player}")
+                    st.write(f"**{p1_pos} | {p1_team}**")
+                    st.divider()
+                    st.metric("Total Points (PPR)", f"{p1_stats.get('TotalFantasyPoints', 0):.2f}")
+                    st.metric("Total TDs", f"{p1_tds}")
+                    if 'passing_yards' in p1_stats and p1_stats['passing_yards'] > 0:
+                        st.metric("Passing Yards", f"{int(p1_stats['passing_yards'])}")
+                    if 'rushing_yards' in p1_stats and p1_stats['rushing_yards'] > 0:
+                        st.metric("Rushing Yards", f"{int(p1_stats['rushing_yards'])}")
+                    if 'receiving_yards' in p1_stats and p1_stats['receiving_yards'] > 0:
+                        st.metric("Receiving Yards", f"{int(p1_stats['receiving_yards'])}")
+                else:
+                    st.error(f"No data for {selected_player}")
+
+            # --- Player 2 (from new selectbox) ---
+            with comp_col2:
+                player_2_data = df[df['Player'] == selected_player_2]
+                
+                if not player_2_data.empty:
+                    p2_stats = player_2_data.sum(numeric_only=True)
+                    p2_pos = player_2_data['Position'].iloc[0]
+                    p2_team = player_2_data['Team'].iloc[0]
+                    p2_tds = int(p2_stats.get('rushing_tds', 0) + p2_stats.get('receiving_tds', 0) + p2_stats.get('passing_tds', 0))
+
+                    st.markdown(f"#### {selected_player_2}")
+                    st.write(f"**{p2_pos} | {p2_team}**")
+                    st.divider()
+                    st.metric("Total Points (PPR)", f"{p2_stats.get('TotalFantasyPoints', 0):.2f}")
+                    st.metric("Total TDs", f"{p2_tds}")
+                    if 'passing_yards' in p2_stats and p2_stats['passing_yards'] > 0:
+                        st.metric("Passing Yards", f"{int(p2_stats['passing_yards'])}")
+                    if 'rushing_yards' in p2_stats and p2_stats['rushing_yards'] > 0:
+                        st.metric("Rushing Yards", f"{int(p2_stats['rushing_yards'])}")
+                    if 'receiving_yards' in p2_stats and p2_stats['receiving_yards'] > 0:
+                        st.metric("Receiving Yards", f"{int(p2_stats['receiving_yards'])}")
+                else:
+                    st.error(f"No data for {selected_player_2}")
+        
+        # --- End of Player vs Player section ---
 
     with col2:
         # Static "Top Fantasy Players" section
