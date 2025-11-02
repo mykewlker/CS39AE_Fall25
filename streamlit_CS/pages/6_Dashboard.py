@@ -166,6 +166,13 @@ if df is not None:
             
             st.dataframe(weekly_display_df, use_container_width=True)
             
+            # --- ADDED: Weekly Points Bar Chart ---
+            st.subheader("Weekly Points Chart")
+            # We already have the data in weekly_display_df, let's just plot the points
+            # We select just the column we want to plot. The index ('week') is used for the x-axis.
+            st.bar_chart(weekly_display_df['Fantasy Points (PPR)'])
+            # --- End of Added Section ---
+            
         # Dynamic "Player vs Player" section
         st.subheader("Player vs. Player / Future Matchups")
         st.info("In-depth matchup analysis will go here.")
