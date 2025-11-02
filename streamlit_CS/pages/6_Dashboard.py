@@ -1,14 +1,18 @@
 import streamlit as st
 import pandas as pd
 import altair as alt  # Import the altair library
+import numpy as np # Import numpy for conditional logic
 
 # --- Page Setup ---
 # Set the page configuration to be wide
 st.set_page_config(layout="wide")
 
 # --- Data Loading ---
-# NEW, more reliable URL from the nflverse *releases* page
+# Player stats URL
 DATA_URL = 'https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_2023.csv'
+# NEW: Schedule data URL
+SCHEDULE_DATA_URL = 'https://github.com/nflverse/nflverse-data/releases/download/schedules/schedules_2023.csv'
+
 
 @st.cache_data  # Cache the data so it doesn't re-load on every interaction
 def load_data(url):
@@ -66,8 +70,23 @@ def load_data(url):
         st.error(f"Error loading data: {e}")
         return None
 
-# Load the data
+@st.cache_data
+def load_schedule_data(url):
+    """
+    Loads the 2023 season schedule data from the specified nflverse URL.
+    """
+    try:
+        schedule = pd.read_csv(url)
+        # We only care about regular season games
+        schedule = schedule[schedule['game_type'] == 'REG']
+        return schedule
+    except Exception as e:
+        st.error(f"Error loading schedule data: {e}")
+        return None
+
+# Load both dataframes
 df = load_data(DATA_URL)
+schedule_df = load_schedule_data(SCHEDULE_DATA_URL)
 
 if df is not None:
     # --- Main Page Title ---
@@ -85,6 +104,10 @@ if df is not None:
 
     # --- Player Stats (Dynamic) ---
     st.sidebar.header("Player Season Stats (2023)")
+    
+    # We need to declare 'team' here so we can use it for the schedule
+    team = None 
+    
     if selected_player:
         # Filter the dataframe for the selected player
         player_data = df[df['Player'] == selected_player]
@@ -95,7 +118,7 @@ if df is not None:
             
             # Get non-numeric info from the first available week
             position = player_data['Position'].iloc[0]
-            team = player_data['Team'].iloc[0]
+            team = player_data['Team'].iloc[0] # Get the player's team
             
             st.sidebar.markdown(f"### {selected_player}")
             st.sidebar.write(f"**Position:** {position} | **Team:** {team}")
@@ -126,10 +149,58 @@ if df is not None:
         
         else:
             st.sidebar.error("Could not find stats for this player.")
+    
+    # --- Game Schedule (Dynamic) ---
+    st.sidebar.header("Team Schedule (2023)")
+    if team and schedule_df is not None:
+        # Find all games (home or away) for the selected player's team
+        team_schedule = schedule_df[
+            (schedule_df['home_team'] == team) | (schedule_df['away_team'] == team)
+        ].sort_values(by='week')
         
-    # Game Schedule placeholder
-    st.sidebar.header("Game Schedule")
-    st.sidebar.info("Full league schedule coming in a future step!")
+        if not team_schedule.empty:
+            # Create Opponent column
+            team_schedule['Opponent'] = np.where(
+                team_schedule['home_team'] == team, 
+                "vs " + team_schedule['away_team'], 
+                "@ " + team_schedule['home_team']
+            )
+            
+            # Create Result column
+            team_schedule['Result'] = np.where(
+                team_schedule['result'] > 0, 
+                f"W {team_schedule['home_score']}-{team_schedule['away_score']}", 
+                np.where(
+                    team_schedule['result'] < 0,
+                    f"L {team_schedule['home_score']}-{team_schedule['away_score']}",
+                    "T" # For ties, though rare
+                )
+            )
+            # Fix result string for away team
+            team_schedule['Result'] = np.where(
+                (team_schedule['away_team'] == team) & (team_schedule['result'] < 0),
+                f"W {team_schedule['away_score']}-{team_schedule['home_score']}",
+                np.where(
+                    (team_schedule['away_team'] == team) & (team_schedule['result'] > 0),
+                    f"L {team_schedule['away_score']}-{team_schedule['home_score']}",
+                    team_schedule['Result'] # Keep W/L string from home team logic
+                )
+            )
+            
+            
+            # Select and display
+            display_cols = ['week', 'Opponent', 'Result']
+            st.sidebar.dataframe(
+                team_schedule[display_cols].set_index('week'), 
+                use_container_width=True
+            )
+        else:
+            st.sidebar.warning(f"No schedule data found for team: {team}")
+    
+    elif not team:
+        st.sidebar.info("Select a player to see their team's schedule.")
+    else:
+        st.sidebar.error("Schedule data could not be loaded.")
 
 
     # --- Main Content Area ---
