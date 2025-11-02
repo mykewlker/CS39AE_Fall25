@@ -10,8 +10,8 @@ st.set_page_config(layout="wide")
 # --- Data Loading ---
 # Player stats URL
 DATA_URL = 'https://github.com/nflverse/nflverse-data/releases/download/player_stats/player_stats_2023.csv'
-# NEW: Schedule data URL (from a different nflverse repo)
-SCHEDULE_DATA_URL = 'https://raw.githubusercontent.com/nflverse/nflverse-pbp/master/schedules/schedules_2023.csv'
+# NEW: Schedule data URL (from the nflfastR data repo - third time's the charm!)
+SCHEDULE_DATA_URL = 'https://raw.githubusercontent.com/nflfastR/nflfastR-data/master/schedules/sched_2023.csv'
 
 
 @st.cache_data  # Cache the data so it doesn't re-load on every interaction
