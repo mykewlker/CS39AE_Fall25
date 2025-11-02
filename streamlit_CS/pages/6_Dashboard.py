@@ -92,6 +92,12 @@ if df is not None:
     # --- Player Stats (Dynamic) ---
     st.sidebar.header("Player Season Stats (2023)")
     
+    # Define variables to hold snapshot data, in case they are needed
+    positional_rank = 0
+    position = ""
+    games_played = 0
+    avg_points = 0.0
+
     if selected_player:
         # Filter the dataframe for the selected player
         player_data = df[df['Player'] == selected_player]
@@ -131,37 +137,23 @@ if df is not None:
             if 'receiving_yards' in season_stats and season_stats['receiving_yards'] > 0:
                 st.sidebar.metric("Receiving Yards", f"{int(season_stats['receiving_yards'])}")
             
-            # --- Season Snapshot Section ---
-            st.sidebar.markdown("---")
-            st.sidebar.subheader("Season Snapshot")
-            
-            # Get rank info from our pre-calculated dataframe
+            # --- Season Snapshot Section Calculations ---
+            # This logic is kept here, but the display is moved to the main page
             player_rank_info = season_totals_df[season_totals_df['Player'] == selected_player]
             positional_rank = player_rank_info['Pos. Rank'].iloc[0]
-            
-            # Get games played
             games_played = len(player_data)
-            
-            # Calculate average points
             avg_points = season_stats.get('TotalFantasyPoints', 0) / games_played if games_played > 0 else 0
-            
-            # Display snapshot metrics
-            r_col1, r_col2 = st.sidebar.columns(2)
-            r_col1.metric("Positional Rank", f"#{positional_rank} {position}")
-            r_col2.metric("Games Played", f"{games_played}")
-            
-            st.sidebar.metric("Avg Points / Game", f"{avg_points:.2f}")
 
         else:
             st.sidebar.error("Could not find stats for this player.")
 
-    # --- Main Content Area (2x2 Grid) ---
+    # --- Main Content Area (3-Column Layout) ---
     
-    # Create the two main columns for the grid
-    main_col1, main_col2 = st.columns(2)
+    # Create three main columns. 2 parts for the main charts, 1 for snapshot, 1 for top players
+    col1, col2, col3 = st.columns([2, 1, 1])
 
-    with main_col1:
-        # --- Top-Left: Weekly Chart ---
+    with col1:
+        # --- Left Column: Weekly Chart ---
         if selected_player:
             player_data = df[df['Player'] == selected_player]
             
@@ -189,26 +181,7 @@ if df is not None:
         else:
              st.info("Select a player from the sidebar to see their weekly stats and chart.")
 
-    with main_col2:
-        # --- Top-Right: Top Fantasy Players ---
-        st.subheader("Top Fantasy Players (2023)")
-        
-        try:
-            # Aggregate points by player and get the top 30
-            player_points = df.groupby('Player')['TotalFantasyPoints'].sum().nlargest(30).reset_index()
-            player_points['TotalFantasyPoints'] = player_points['TotalFantasyPoints'].round(2)
-            player_points.index = player_points.index + 1 # Start index at 1
-            # Give the dataframe a fixed height to make it scrollable
-            st.dataframe(player_points, use_container_width=True, hide_index=True, height=500)
-        except Exception as e:
-            st.error(f"Could not calculate top players: {e}")
-
-    # --- Bottom Row ---
-    # Create two columns for the bottom row
-    bottom_col1, bottom_col2 = st.columns(2)
-
-    with bottom_col1:
-        # --- Bottom-Left: Weekly Stats Table ---
+        # --- Left Column: Weekly Stats Table ---
         if selected_player:
             player_data = df[df['Player'] == selected_player]
             st.subheader(f"Weekly Stats Table (2023)")
@@ -232,8 +205,22 @@ if df is not None:
         else:
             st.info("Select a player to see their weekly stats.")
 
-    with bottom_col2:
-        # --- Bottom-Right: Player vs. Player ---
+    with col2:
+        # --- Middle Column: Season Snapshot ---
+        st.subheader("Season Snapshot")
+        if selected_player:
+            # Display snapshot metrics
+            r_col1, r_col2 = st.columns(2)
+            r_col1.metric("Positional Rank", f"#{positional_rank} {position}")
+            r_col2.metric("Games Played", f"{games_played}")
+            
+            st.metric("Avg Points / Game", f"{avg_points:.2f}")
+        else:
+            st.info("Select a player to see their snapshot.")
+        
+        st.divider()
+
+        # --- Middle Column: Player vs. Player ---
         st.subheader("Player vs. Player Comparison (2023)")
         
         selected_player_2 = st.selectbox("Select a comparison player", players, index=1)
@@ -282,6 +269,20 @@ if df is not None:
         
         elif not selected_player:
             st.info("Select a player from the sidebar to enable comparison.")
+
+    with col3:
+        # --- Right Column: Top Fantasy Players ---
+        st.subheader("Top Fantasy Players (2023)")
+        
+        try:
+            # Aggregate points by player and get the top 30
+            player_points = df.groupby('Player')['TotalFantasyPoints'].sum().nlargest(30).reset_index()
+            player_points['TotalFantasyPoints'] = player_points['TotalFantasyPoints'].round(2)
+            player_points.index = player_points.index + 1 # Start index at 1
+            # Give the dataframe a fixed height to make it scrollable
+            st.dataframe(player_points, use_container_width=True, hide_index=True, height=800)
+        except Exception as e:
+            st.error(f"Could not calculate top players: {e}")
 
 else:
     st.error("Failed to load data. The dashboard cannot be displayed.")
