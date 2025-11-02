@@ -6,44 +6,54 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # --- Data Loading ---
-# URL for a complete 2022 season dataset (a good starting point)
-DATA_URL = 'https://raw.githubusercontent.com/fantasydatapros/data/master/yearly/2022.csv'
+# NEW, reliable URL from the nflverse project (2023 weekly data)
+DATA_URL = 'https://raw.githubusercontent.com/nflverse/nflverse-data/main/data/player-stats/player_stats_2023.csv'
 
 @st.cache_data  # Cache the data so it doesn't re-load on every interaction
 def load_data(url):
     """
-    Loads data from the specified URL and renames columns for clarity.
-    We'll add a 'TotalFantasyPoints' column for this example.
+    Loads weekly player stats data from the specified nflverse URL.
     """
     try:
         data = pd.read_csv(url)
-        # Check for a common fantasy points column, e.g., 'FantasyPointsPPR'
-        # If not, we'll calculate a simple one.
-        if 'FantasyPointsPPR' in data.columns:
-            # Rename for simplicity
-            data = data.rename(columns={'FantasyPointsPPR': 'TotalFantasyPoints'})
-        elif 'FantasyPoints' in data.columns:
-            data = data.rename(columns={'FantasyPoints': 'TotalFantasyPoints'})
+        
+        # --- Column Name Standardization ---
+        # The new data source uses 'player_name' and 'fantasy_points_ppr'
+        
+        if 'player_name' not in data.columns:
+            st.error("Data source is missing 'player_name' column. Cannot proceed.")
+            return None
+            
+        if 'fantasy_points_ppr' in data.columns:
+            # Rename for simplicity and consistency with old code
+            data = data.rename(columns={
+                'fantasy_points_ppr': 'TotalFantasyPoints',
+                'player_name': 'Player'
+            })
+        elif 'fantasy_points' in data.columns:
+            # Fallback to standard fantasy points
+            data = data.rename(columns={
+                'fantasy_points': 'TotalFantasyPoints',
+                'player_name': 'Player'
+            })
         else:
             # Create a very simple fantasy point calculation if none exists
             # This is just a fallback for demonstration
+            st.warning("Could not find 'fantasy_points_ppr', calculating simple points.")
             data['TotalFantasyPoints'] = (
-                data.get('PassingYds', 0) / 25 +
-                data.get('PassingTD', 0) * 4 +
-                data.get('RushingYds', 0) / 10 +
-                data.get('RushingTD', 0) * 6 +
-                data.get('ReceivingYds', 0) / 10 +
-                data.get('ReceivingTD', 0) * 6 -
-                data.get('Int', 0) * 2 -
-                data.get('FumblesLost', 0) * 2
+                data.get('passing_yards', 0) / 25 +
+                data.get('passing_tds', 0) * 4 +
+                data.get('rushing_yards', 0) / 10 +
+                data.get('rushing_tds', 0) * 6 +
+                data.get('receiving_yards', 0) / 10 +
+                data.get('receiving_tds', 0) * 6 -
+                data.get('interceptions', 0) * 2 -
+                data.get('fumbles_lost', 0) * 2
             )
-        
-        # We need a player name column
-        if 'Player' not in data.columns:
-            st.error("Data source is missing 'Player' column. Using 'Unnamed: 1' as fallback.")
-            data = data.rename(columns={'Unnamed: 1': 'Player'})
-            
+            data = data.rename(columns={'player_name': 'Player'})
+
         return data
+        
     except Exception as e:
         st.error(f"Error loading data: {e}")
         return None
@@ -61,6 +71,7 @@ if df is not None:
     st.sidebar.header("Player Selection")
     # Get a unique, sorted list of player names
     try:
+        # Use the 'Player' column (which we renamed from 'player_name')
         players = sorted(df['Player'].unique())
         selected_player = st.sidebar.selectbox("Select a Player", players)
     except Exception as e:
@@ -100,11 +111,11 @@ if df is not None:
 
     with col2:
         # Static "Top Fantasy Players" section
-        st.subheader("Top Fantasy Players (2022)")
+        st.subheader("Top Fantasy Players (2023)")
         
         try:
             # Aggregate points by player and get the top 15
-            # This assumes the data is weekly and needs summing
+            # This data is weekly, so summing is the correct approach
             player_points = df.groupby('Player')['TotalFantasyPoints'].sum().nlargest(15).reset_index()
             player_points.index = player_points.index + 1 # Start index at 1
             st.dataframe(player_points, use_container_width=True)
@@ -114,3 +125,4 @@ if df is not None:
 else:
     st.error("Failed to load data. The dashboard cannot be displayed.")
     st.info("Please check the DATA_URL or your internet connection.")
+
