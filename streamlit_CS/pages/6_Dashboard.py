@@ -18,27 +18,27 @@ def load_data(url):
         data = pd.read_csv(url)
         
         # --- Column Name Standardization ---
-        # The new data source uses 'player_name' and 'fantasy_points_ppr'
-        
         if 'player_name' not in data.columns:
             st.error("Data source is missing 'player_name' column. Cannot proceed.")
             return None
-            
+        
+        # We need these columns for our display
+        required_cols = {
+            'player_name': 'Player',
+            'position': 'Position',
+            'recent_team': 'Team'
+        }
+        
+        # Check for fantasy points columns
         if 'fantasy_points_ppr' in data.columns:
-            # Rename for simplicity and consistency with old code
-            data = data.rename(columns={
-                'fantasy_points_ppr': 'TotalFantasyPoints',
-                'player_name': 'Player'
-            })
+            required_cols['fantasy_points_ppr'] = 'TotalFantasyPoints'
         elif 'fantasy_points' in data.columns:
-            # Fallback to standard fantasy points
-            data = data.rename(columns={
-                'fantasy_points': 'TotalFantasyPoints',
-                'player_name': 'Player'
-            })
-        else:
-            # Create a very simple fantasy point calculation if none exists
-            # This is just a fallback for demonstration
+            required_cols['fantasy_points'] = 'TotalFantasyPoints'
+            
+        data = data.rename(columns=required_cols)
+
+        # Calculate simple points if no fantasy points column was found
+        if 'TotalFantasyPoints' not in data.columns:
             st.warning("Could not find 'fantasy_points_ppr', calculating simple points.")
             data['TotalFantasyPoints'] = (
                 data.get('passing_yards', 0) / 25 +
@@ -50,7 +50,14 @@ def load_data(url):
                 data.get('interceptions', 0) * 2 -
                 data.get('fumbles_lost', 0) * 2
             )
-            data = data.rename(columns={'player_name': 'Player'})
+            
+        # Fill NaN values in key columns to prevent errors
+        key_stat_cols = ['TotalFantasyPoints', 'passing_yards', 'passing_tds', 'rushing_yards', 'rushing_tds', 'receiving_yards', 'receiving_tds']
+        for col in key_stat_cols:
+            if col in data.columns:
+                data[col] = data[col].fillna(0)
+            else:
+                data[col] = 0 # Create column if it doesn't exist
 
         return data
         
@@ -66,44 +73,99 @@ if df is not None:
     st.title("Fantasy Football Dashboard")
 
     # --- Sidebar ---
-    # This will contain all the widgets from the left side of your mockup
-    
     st.sidebar.header("Player Selection")
-    # Get a unique, sorted list of player names
+    
     try:
-        # Use the 'Player' column (which we renamed from 'player_name')
         players = sorted(df['Player'].unique())
         selected_player = st.sidebar.selectbox("Select a Player", players)
     except Exception as e:
         st.sidebar.error(f"Could not load player list: {e}")
         selected_player = None
 
-    # Player Stats placeholder
-    st.sidebar.header("Player Stats")
+    # --- Player Stats (Dynamic) ---
+    st.sidebar.header("Player Season Stats (2023)")
     if selected_player:
-        st.sidebar.markdown(f"Stats for **{selected_player}** will appear here.")
-        # (We will build this in Step 2)
-        st.sidebar.info("Dynamic player stats card coming in Step 2!")
+        # Filter the dataframe for the selected player
+        player_data = df[df['Player'] == selected_player]
+        
+        if not player_data.empty:
+            # Get season totals by summing all weekly stats
+            season_stats = player_data.sum(numeric_only=True)
+            
+            # Get non-numeric info from the first available week
+            position = player_data['Position'].iloc[0]
+            team = player_data['Team'].iloc[0]
+            
+            st.sidebar.markdown(f"### {selected_player}")
+            st.sidebar.write(f"**Position:** {position} | **Team:** {team}")
+            
+            st.sidebar.divider()
+            
+            # Display key metrics in columns
+            m_col1, m_col2 = st.sidebar.columns(2)
+            
+            total_tds = int(season_stats.get('rushing_tds', 0) + 
+                            season_stats.get('receiving_tds', 0) + 
+                            season_stats.get('passing_tds', 0))
+            
+            m_col1.metric("Total Points (PPR)", f"{season_stats.get('TotalFantasyPoints', 0):.2f}")
+            m_col2.metric("Total TDs", f"{total_tds}")
+
+            st.sidebar.markdown("---")
+            st.sidebar.subheader("Offensive Yards")
+            
+            if 'passing_yards' in season_stats and season_stats['passing_yards'] > 0:
+                st.sidebar.metric("Passing Yards", f"{int(season_stats['passing_yards'])}")
+                
+            if 'rushing_yards' in season_stats and season_stats['rushing_yards'] > 0:
+                st.sidebar.metric("Rushing Yards", f"{int(season_stats['rushing_yards'])}")
+                
+            if 'receiving_yards' in season_stats and season_stats['receiving_yards'] > 0:
+                st.sidebar.metric("Receiving Yards", f"{int(season_stats['receiving_yards'])}")
+        
+        else:
+            st.sidebar.error("Could not find stats for this player.")
         
     # Game Schedule placeholder
     st.sidebar.header("Game Schedule")
-    st.sidebar.markdown("Full league schedule will go here.")
-    # (We can build this in a later step)
-    st.sidebar.info("Upcoming game schedule coming soon!")
+    st.sidebar.info("Full league schedule coming in a future step!")
 
 
     # --- Main Content Area ---
-    # This will be split into two columns as per your mockup
-    col1, col2 = st.columns([2, 1]) # Main area (2/3), Right sidebar (1/3)
+    col1, col2 = st.columns([2, 1])
 
     with col1:
-        # Dynamic "Stats Today / Upcoming Game" section
-        st.subheader("Upcoming Game & Matchup Analysis")
+        # --- Weekly Performance (Dynamic) ---
+        st.subheader(f"Weekly Performance (2023)")
         if selected_player:
-            st.markdown(f"Details for **{selected_player}**'s next game.")
-            # (We will build this in Step 2)
-            st.info("Dynamic matchup details coming in Step 2!")
-
+            player_data = df[df['Player'] == selected_player]
+            
+            # Define columns to display for the weekly log
+            cols_to_show = [
+                'week', 
+                'opponent_team', 
+                'TotalFantasyPoints', 
+                'passing_yards', 
+                'passing_tds', 
+                'rushing_yards', 
+                'rushing_tds', 
+                'receiving_yards', 
+                'receiving_tds'
+            ]
+            
+            # Filter for columns that actually exist in our dataframe
+            existing_cols_to_show = [col for col in cols_to_show if col in player_data.columns]
+            
+            weekly_display_df = player_data[existing_cols_to_show].sort_values(by='week').set_index('week')
+            
+            # Rename for a cleaner display
+            weekly_display_df = weekly_display_df.rename(columns={
+                'opponent_team': 'Opponent',
+                'TotalFantasyPoints': 'Fantasy Points (PPR)'
+            })
+            
+            st.dataframe(weekly_display_df, use_container_width=True)
+            
         # Dynamic "Player vs Player" section
         st.subheader("Player vs. Player / Future Matchups")
         st.info("In-depth matchup analysis will go here.")
@@ -115,10 +177,10 @@ if df is not None:
         
         try:
             # Aggregate points by player and get the top 15
-            # This data is weekly, so summing is the correct approach
             player_points = df.groupby('Player')['TotalFantasyPoints'].sum().nlargest(15).reset_index()
+            player_points['TotalFantasyPoints'] = player_points['TotalFantasyPoints'].round(2)
             player_points.index = player_points.index + 1 # Start index at 1
-            st.dataframe(player_points, use_container_width=True)
+            st.dataframe(player_points, use_container_width=True, hide_index=True)
         except Exception as e:
             st.error(f"Could not calculate top players: {e}")
 
