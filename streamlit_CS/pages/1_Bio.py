@@ -2,7 +2,7 @@ import streamlit as st
 
 st.title("👋 My Bio")
 
-# ---------- TODO: Replace with your own info ----------
+
 NAME = "Myke Walker"
 PROGRAM = "Computer Science Major"
 INTRO = (
@@ -45,4 +45,12 @@ for i, f in enumerate(FUN_FACTS, start=1):
     st.write(f"- {f}")
 
 st.divider()
-st.caption("Edit `pages/1_Bio.py` to customize this page.")
+st.header("Core Competencies & Skills")
+st.markdown("""
+* **Data Analysis:** Python (Pandas, NumPy), SQL
+* **Data Visualization:** Altair, Matplotlib, Seaborn
+* **Dashboarding:** Streamlit, Tableau (Optional)
+* **Programming:** Python scripting, data structures
+* **Business Acumen:** Data-driven insights, storytelling, requirements gathering
+""")
+
