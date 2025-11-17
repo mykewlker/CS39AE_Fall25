@@ -28,7 +28,18 @@ with col2:
     st.subheader(NAME)
     st.write(PROGRAM)
     st.write(INTRO)
-
+    st.write("""
+    Welcome to my professional portfolio and analytics dashboard! 
+    
+    I am a data-driven problem solver with a passion for uncovering insights 
+    and turning complex data into actionable stories. With experience in Python, 
+    SQL, and data visualization, I specialize in exploratory data analysis (EDA) 
+    and building interactive dashboards that empower decision-making.
+    
+    This application is a demonstration of my skills, built entirely in Python 
+    using Streamlit. Please explore the EDA Gallery for an analysis of a 
+    Steam games dataset, or check out the interactive dashboard.
+    """)
 st.markdown("### Fun facts")
 for i, f in enumerate(FUN_FACTS, start=1):
     st.write(f"- {f}")
