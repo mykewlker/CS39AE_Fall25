@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import ast
-import os  # <-- This is the key import for the fix
+import os
+import datetime # <-- Import datetime
 
 # --- Page Configuration ---
 # This must be the first Streamlit command
@@ -129,6 +130,16 @@ df = load_data(DATA_PATH)
 # This allows all other pages (in the 'pages' folder) to access the same data
 if not df.empty:
     st.session_state['df'] = df
+    
+    # --- NEW: Get file modification time for 'last refreshed' timestamp ---
+    try:
+        mod_time_timestamp = os.path.getmtime(DATA_PATH)
+        mod_time = datetime.datetime.fromtimestamp(mod_time_timestamp).strftime("%Y-%m-%d %H:%M %Z")
+        st.session_state['data_last_refreshed'] = mod_time
+    except FileNotFoundError:
+        st.session_state['data_last_refreshed'] = "N/A (File not found)"
+    # --- END NEW ---
+
 else:
     # If loading failed, store an empty DF to prevent KeyErrors on other pages
     st.session_state['df'] = pd.DataFrame()
@@ -163,4 +174,5 @@ and processed with **Pandas**, and the visualizations are created with **Altair*
 if df.empty:
     st.error("Data loading failed. See error message above. The other pages will not work until this is resolved.")
 else:
-    st.success(f"Data for {len(df)} games loaded successfully! You can now explore the other pages.")
+    last_refreshed_time = st.session_state.get('data_last_refreshed', 'N/A')
+    st.success(f"Data for {len(df)} games loaded successfully! (Last Refreshed: {last_refreshed_time}) You can now explore the other pages.")
