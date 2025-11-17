@@ -178,7 +178,7 @@ Based on the filtered data and the charts, here are a few key insights:
 * **High-Quality Games are Price-Agnostic:** You can find highly-rated games (90%+ positive reviews) at all price points, from under $10 to $60+. Use the "Positive Review %" filter to find them.
 * **"Both" is Better:** Games offering both "Single-player & Multi-player" modes consistently show the highest average number of estimated owners in the full dataset.
 * **Reviews vs. Critics:** User reviews (`Positive Review %`) and critic scores (`Metacritic Score`) don't always agree. You can use the filters to find "hidden gems" (high user score, low critic score).
-* **Limitations:** This dashboard is based on a **static 100-game sample**. As such, "Total Owners" is an estimate, and trends (especially for "Top 10" charts) may differ significantly when applied to the full, live dataset.
+* **Limitations:** This dashboard is based on a **static 2000-game sample**. As such, "Total Owners" is an estimate, and trends (especially for "Top 10" charts) may differ significantly when applied to the full, live dataset.
 """)
 # --- END NEW ---
 
