@@ -18,6 +18,7 @@ df = st.session_state.get('df')
 
 if df is None or df.empty:
     st.error("Data not loaded. Please go to the main 'Home' page to load the data first.")
+    st.info("If you are on the 'Home' page and see this, please ensure the `data/sample.csv` file exists in your repository.")
     st.stop()
 
 # --- Page Content ---
@@ -52,7 +53,7 @@ if not chart1_df.empty:
     # Create the chart
     base = alt.Chart(chart1_df).mark_circle(opacity=0.7).encode(
         x=alt.X('price', title='Price (USD)'),
-        y=alt.Y('Positive Review %', title='Positive Review %', scale=alt.Scale(zero=False)),
+        y=alt.Y('Positive Review %', title='Positive User Review %', scale=alt.Scale(zero=False)),
         tooltip=['name', 'price', 'Positive Review %']
     ).interactive()
     
