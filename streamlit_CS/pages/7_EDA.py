@@ -23,7 +23,7 @@ if df is None or df.empty:
 # --- Page Content ---
 st.markdown("""
 This gallery contains an exploratory data analysis (EDA) of a sample dataset 
-of 2000 Steam games. Each section includes a question, a visualization 
+of 100 Steam games. Each section includes a question, a visualization 
 to answer it, an explainer on how to read the chart, and my observations.
 """)
 
@@ -202,110 +202,22 @@ chart4_df = chart4_df.sort_values(by='Playtime (Minutes) per Dollar', ascending=
 
 if not chart4_df.empty:
     # Create the chart
-    chart4 = alt.Chart(chart4_row = st.columns(3)
-    kpi1, kpi2, kpi3 = st.columns(3)
-    
-    # --- Row 1: KPIs ---
-    with kpi1:
-        st.metric(
-            label="Total Games in Filter",
-            value=f"{total_games:,.0f}"
-        )
-
-    with kpi2:
-        st.metric(
-            label="Avg. Metacritic Score",
-            value=f"{avg_metacritic:.1f}",
-            delta=f"{avg_metacritic - global_avg_metacritic:.1f} vs. overall avg",
-            delta_color="normal" if avg_metacritic >= global_avg_metacritic else "inverse"
-        )
-        
-    with kpi3:
-        st.metric(
-            label="Avg. Positive Review %",
-            value=f"{avg_user_score:.1f}%",
-            delta=f"{avg_user_score - global_avg_user:.1f}% vs. overall avg",
-            delta_color="normal" if avg_user_score >= global_avg_user else "inverse"
-        )
-    
-    # --- Row 2: Charts ---
-    with chart4_row[0]:
-        st.subheader("Games by Type")
-        
-        # Donut Chart for Game Type
-        type_counts = filtered_df['game_type'].value_counts().reset_index()
-        type_counts.columns = ['game_type', 'count']
-        
-        base = alt.Chart(type_counts).encode(
-           theta=alt.Theta("count:Q", stack=True)
-        ).properties(
-            title='Game Type Distribution'
-        )
-        
-        # Specify the outer radius of the arcs and encode color
-        donut = base.mark_arc(outerRadius=120, innerRadius=80).encode(
-            color=alt.Color("game_type:N", title="Game Type"),
-            order=alt.Order("count:Q", sort="descending"),
-            tooltip=["game_type", "count", alt.Tooltip("count", format=".1%")]
-        )
-        
-        text = base.mark_text(radius=140).encode(
-            text=alt.Text("count", format=".1%"),
-            order=alt.Order("count:Q", sort="descending"),
-            color=alt.value("black")  # Set the color of the labels
-        )
-
-        st.altair_chart(donut + text, use_container_width=True)
-
-    with chart4_row[1]:
-        st.subheader("Price vs. User Score")
-        
-        # Scatter Plot: Price vs. User Score
-        scatter = alt.Chart(filtered_df).mark_circle(opacity=0.7).encode(
-            x=alt.X('price', title='Price (USD)'),
-            y=alt.Y('Positive Review %', title='Positive User Review %', scale=alt.Scale(zero=False)),
-            tooltip=['name', 'price', 'Positive Review %']
-        ).interactive()
-        
-        st.altair_chart(scatter, use_container_width=True)
-        
-    with chart4_row[2]:
-        st.subheader("Top 5 Genres")
-        
-        # Bar Chart: Top 5 Genres
-        # We need to re-explode based on the filtered data
-        genre_df = filtered_df.explode('genres_list')
-        top_genres = genre_df['genres_list'].value_counts().head(5).reset_index()
-        top_genres.columns = ['Genre', 'Count']
-        
-        bar = alt.Chart(top_Genres).mark_bar().encode(
-            x=alt.X('Genre', sort=None),
-            y=alt.Y('Count'),
-            tooltip=['Genre', 'Count']
-        ).properties(
-            title='Top 5 Genres in Filter'
-        )
-        st.altair_chart(bar, use_container_width=True)
-        
-    # --- Row 3: Data Table ---
-    st.divider()
-    st.subheader(f"Filtered Games ({total_games} results)")
-    
-    # Define columns to show
-    cols_to_show = [
-        'name', 
-        'price', 
-        'metacritic_score', 
-        'Positive Review %', 
-        'genres', 
-        'estimated_owners'
-    ]
-    
-    st.dataframe(
-        filtered_df[cols_to_show], 
-        use_container_width=True,
-        hide_index=True
+    chart4 = alt.Chart(chart4_df.head(15)).mark_bar().encode(
+        x=alt.X('Genre', sort=None, title='Game Genre'), # Use 'sort=None' because it's pre-sorted
+        y=alt.Y('Playtime (Minutes) per Dollar', title='Average Playtime (Minutes) per Dollar'),
+        tooltip=['Genre', 'Playtime (Minutes) per Dollar']
+    ).properties(
+        title='Value Proposition: Playtime per Dollar (Top 15 Genres)'
     )
-
+    st.altair_chart(chart4, use_container_width=True)
 else:
-    st.warning("No games found matching your filters. Please try expanding your selection.")
+    st.warning("No data available to display this chart (e.g., no paid games with genres and playtime).")
+
+st.subheader("My Observations")
+st.markdown("""
+This chart highlights which genres offer the most "bang for your buck." 
+
+In our sample, **'Massively Multiplayer' (MMO)** and **'RPG' (Role-Playing Game)** genres are clear winners, offering a very high number of average playtime minutes 
+for every dollar spent. This makes sense, as these genres are known for 
+long-running content and high replayability.
+""")
