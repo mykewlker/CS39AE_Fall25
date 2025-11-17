@@ -24,7 +24,7 @@ if df is None or df.empty:
 # --- Page Content ---
 st.markdown("""
 This gallery contains an exploratory data analysis (EDA) of a sample dataset 
-of 100 Steam games. Each section includes a question, a visualization 
+of 2000 Steam games. Each section includes a question, a visualization 
 to answer it, an explainer on how to read the chart, and my observations.
 """)
 
