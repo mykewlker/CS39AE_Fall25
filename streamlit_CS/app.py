@@ -49,6 +49,11 @@ def load_data(filepath):
     df['num_reviews_total'] = pd.to_numeric(df['num_reviews_total'], errors='coerce')
     df['num_reviews_total'] = df['num_reviews_total'].fillna(0)
     # --- END FIX ---
+
+    # --- FIX for average_playtime_forever ---
+    df['average_playtime_forever'] = pd.to_numeric(df['average_playtime_forever'], errors='coerce')
+    df['average_playtime_forever'] = df['average_playtime_forever'].fillna(0)
+    # --- END FIX ---
     
     # --- FIX ---
     # Convert 'price' to a numeric type. 
