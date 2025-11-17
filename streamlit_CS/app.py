@@ -131,8 +131,8 @@ analytics product based on a **Steam Games Dataset**.
 Please use the navigation on the left to explore the different pages.
 """)
 
-st.info("This app and all its pages are built using **Streamlit**. The data is loaded 
-and processed with **Pandas**, and the visualizations are created with **Altair**.")
+st.info("""This app and all its pages are built using **Streamlit**. The data is loaded 
+and processed with **Pandas**, and the visualizations are created with **Altair**.""")
 
 # Add a status box to the home page for easy debugging
 if df.empty:
