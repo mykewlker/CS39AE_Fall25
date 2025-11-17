@@ -34,7 +34,11 @@ def load_data(filepath):
     
     # Fill NaNs in other key columns
     df['estimated_owners'] = df['estimated_owners'].fillna('0 - 0')
+    
+    # --- FIX for metacritic_score ---
+    df['metacritic_score'] = pd.to_numeric(df['metacritic_score'], errors='coerce')
     df['metacritic_score'] = df['metacritic_score'].fillna(0)
+    # --- END FIX ---
     
     # --- FIX for pct_pos_total ---
     df['pct_pos_total'] = pd.to_numeric(df['pct_pos_total'], errors='coerce')
