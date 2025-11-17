@@ -38,6 +38,14 @@ def load_data(filepath):
     df['pct_pos_total'] = df['pct_pos_total'].fillna(0)
     df['num_reviews_total'] = df['num_reviews_total'].fillna(0)
     
+    # --- FIX ---
+    # Convert 'price' to a numeric type. 
+    # errors='coerce' will turn any non-numeric strings (like "Free") into NaN
+    df['price'] = pd.to_numeric(df['price'], errors='coerce')
+    # Now, fill any NaNs (from 'coerce' or already existing) with 0.0
+    df['price'] = df['price'].fillna(0.0)
+    # --- END FIX ---
+    
     # --- Helper Functions for Parsing ---
     
     def safe_literal_eval(s):
