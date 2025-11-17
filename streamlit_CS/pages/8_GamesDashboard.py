@@ -169,6 +169,19 @@ with chart_col2:
     ).interactive()
     st.altair_chart(chart2, use_container_width=True)
 
+# --- NEW: Narrative & Insights Section ---
+st.divider()
+st.header("Narrative & Insights")
+st.markdown("""
+Based on the filtered data and the charts, here are a few key insights:
+
+* **High-Quality Games are Price-Agnostic:** You can find highly-rated games (90%+ positive reviews) at all price points, from under $10 to $60+. Use the "Positive Review %" filter to find them.
+* **"Both" is Better:** Games offering both "Single-player & Multi-player" modes consistently show the highest average number of estimated owners in the full dataset.
+* **Reviews vs. Critics:** User reviews (`Positive Review %`) and critic scores (`Metacritic Score`) don't always agree. You can use the filters to find "hidden gems" (high user score, low critic score).
+* **Limitations:** This dashboard is based on a **static 100-game sample**. As such, "Total Owners" is an estimate, and trends (especially for "Top 10" charts) may differ significantly when applied to the full, live dataset.
+""")
+# --- END NEW ---
+
 # Bottom Section: Data Table
 st.divider()
 st.header(f"Filtered Game Data ({len(filtered_df)} results)")
@@ -189,3 +202,15 @@ st.dataframe(
     use_container_width=True,
     hide_index=True
 )
+
+# --- NEW: Reproducibility Section ---
+st.divider()
+st.markdown(
+    """
+    **Data Source:** [Kaggle (Steam Games Dataset)](https://www.kaggle.com/datasets/artermiloff/steam-games-dataset/data)
+    """
+)
+# Get the timestamp from session state
+last_refreshed = st.session_state.get('data_last_refreshed', 'N/A')
+st.caption(f"Data last refreshed: {last_refreshed}")
+# --- END NEW ---
