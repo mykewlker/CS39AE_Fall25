@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import ast
 import os
-import datetime # <-- Import datetime
+import datetime 
 
 # --- Page Configuration ---
 # This must be the first Streamlit command
@@ -36,45 +36,17 @@ def load_data(filepath):
     # Fill NaNs in other key columns
     df['estimated_owners'] = df['estimated_owners'].fillna('0 - 0')
     
-    # --- FIX for metacritic_score ---
-    df['metacritic_score'] = pd.to_numeric(df['metacritic_score'], errors='coerce')
-    df['metacritic_score'] = df['metacritic_score'].fillna(0)
-    # --- END FIX ---
-    
-    # --- FIX for pct_pos_total ---
-    df['pct_pos_total'] = pd.to_numeric(df['pct_pos_total'], errors='coerce')
-    df['pct_pos_total'] = df['pct_pos_total'].fillna(0)
-    # --- END FIX ---
-
-    # --- FIX for num_reviews_total ---
-    df['num_reviews_total'] = pd.to_numeric(df['num_reviews_total'], errors='coerce')
-    df['num_reviews_total'] = df['num_reviews_total'].fillna(0)
-    # --- END FIX ---
-
-    # --- FIX for average_playtime_forever ---
-    df['average_playtime_forever'] = pd.to_numeric(df['average_playtime_forever'], errors='coerce')
-    df['average_playtime_forever'] = df['average_playtime_forever'].fillna(0)
-    # --- END FIX ---
+    # --- FIXES: Convert to numeric and fill NaN/coerce errors ---
+    for col in ['metacritic_score', 'pct_pos_total', 'num_reviews_total', 'average_playtime_forever', 'price']:
+        df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.0)
     
     # --- FIX: Platform Columns ---
     # Ensure windows, mac, linux are numeric (0 or 1) to allow summing.
-    # This handles cases where they might be read as strings "True"/"False".
     for col in ['windows', 'mac', 'linux']:
-        # Check if column exists
         if col in df.columns:
-            # Map string/bool values to 1 and 0
             val_map = {'True': 1, 'true': 1, 'False': 0, 'false': 0}
-            # Convert to string first to handle mixed types safely, then map
             df[col] = df[col].astype(str).map(val_map).fillna(0).astype(int)
-    # --- END FIX ---
-    
-    # --- FIX ---
-    # Convert 'price' to a numeric type. 
-    # errors='coerce' will turn any non-numeric strings (like "Free") into NaN
-    df['price'] = pd.to_numeric(df['price'], errors='coerce')
-    # Now, fill any NaNs (from 'coerce' or already existing) with 0.0
-    df['price'] = df['price'].fillna(0.0)
-    # --- END FIX ---
+    # --- END FIXES ---
     
     # --- Helper Functions for Parsing ---
     
@@ -143,7 +115,7 @@ df = load_data(DATA_PATH)
 if not df.empty:
     st.session_state['df'] = df
     
-    # --- NEW: Get file modification time for 'last refreshed' timestamp ---
+    # --- Get file modification time for 'last refreshed' timestamp ---
     try:
         mod_time_timestamp = os.path.getmtime(DATA_PATH)
         mod_time = datetime.datetime.fromtimestamp(mod_time_timestamp).strftime("%Y-%m-%d %H:%M %Z")
@@ -157,34 +129,48 @@ else:
     st.session_state['df'] = pd.DataFrame()
 
 
-# --- Home Page Content ---
-st.title("Welcome to my Data Analytics Portfolio!")
-st.image("https://placehold.co/1200x300/3498db/ffffff?text=Welcome+to+my+Portfolio", use_column_width=True)
+# --- Home Page Content (Aesthetic Update) ---
+st.markdown(
+    """
+    # 📊 Data Analyst Portfolio: Steam Games Analysis 🎮
+    ---
+    """
+)
 
-st.header("About This Project")
-st.markdown("""
-This application is a multi-page Streamlit dashboard built to showcase my data analysis 
-and visualization skills. It serves as both my professional portfolio and an interactive 
-analytics product based on a **Steam Games Dataset**.
+col_img, col_text = st.columns([1, 2.5])
 
-**What you can do here:**
+with col_img:
+    st.image(
+        "https://placehold.co/400x250/2E86C1/FFFFFF?text=Data+Exploration", 
+        caption="Exploring the World of Gaming Data",
+        use_column_width=True
+    )
 
-* **Professional Bio:** Learn more about my background and skills.
-* **EDA Gallery:** View a static exploratory data analysis of the Steam dataset, 
-    complete with chart explainers and my key observations.
-* **Interactive Dashboard:** (Work in Progress) An interactive dashboard to filter 
-    and explore the game data yourself.
-* **Future Works:** Read about the potential next steps for this project.
+with col_text:
+    st.header("Welcome!")
+    st.markdown("""
+    This application serves as a **professional portfolio** and an interactive **mini analytics product**. 
+    
+    It showcases my ability to clean data, perform exploratory analysis, and deploy 
+    interactive dashboards using Python, Pandas, and Streamlit.
+    
+    Use the sidebar to navigate to my **Professional Bio**, the **EDA Gallery**, or the 
+    live **Interactive Dashboard** to explore the dataset yourself.
+    """)
 
-Please use the navigation on the left to explore the different pages.
+st.divider()
+
+st.header("Project Overview")
+
+st.info("""
+**Data & Technology:** This project analyzes a sample of **2000 Steam games**. 
+The entire application, including data processing and visualization, is built with 
+**Python**, **Streamlit**, **Pandas**, and **Altair**.
 """)
-
-st.info("""This app and all its pages are built using **Streamlit**. The data is loaded 
-and processed with **Pandas**, and the visualizations are created with **Altair**.""")
 
 # Add a status box to the home page for easy debugging
 if df.empty:
     st.error("Data loading failed. See error message above. The other pages will not work until this is resolved.")
 else:
     last_refreshed_time = st.session_state.get('data_last_refreshed', 'N/A')
-    st.success(f"Data for {len(df)} games loaded successfully! (Last Refreshed: {last_refreshed_time}) You can now explore the other pages.")
+    st.success(f"✅ Data for {len(df)} games loaded successfully! (Last Refreshed: {last_refreshed_time}) You can now explore the other pages.")
