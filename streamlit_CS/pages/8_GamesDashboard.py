@@ -153,7 +153,9 @@ with chart_col1:
     chart1 = alt.Chart(top_10_reviews_df).mark_bar().encode(
         x=alt.X('Positive Review %:Q'),
         y=alt.Y('name:N', sort='-x'),
-        tooltip=['name', 'Positive Review %', 'num_reviews_total']
+        # Added color encoding for Playtime
+        color=alt.Color('average_playtime_forever:Q', title='Avg Playtime (Mins)', scale=alt.Scale(scheme='viridis')),
+        tooltip=['name', 'Positive Review %', 'num_reviews_total', 'average_playtime_forever']
     ).interactive()
     st.altair_chart(chart1, use_container_width=True)
 
@@ -165,7 +167,9 @@ with chart_col2:
     chart2 = alt.Chart(top_10_owners_df).mark_bar().encode(
         x=alt.X('owners_lower_bound:Q', title='Estimated Owners (Lower)'),
         y=alt.Y('name:N', sort='-x'),
-        tooltip=['name', 'owners_lower_bound', 'price']
+        # Added color encoding for Playtime
+        color=alt.Color('average_playtime_forever:Q', title='Avg Playtime (Mins)', scale=alt.Scale(scheme='viridis')),
+        tooltip=['name', 'owners_lower_bound', 'price', 'average_playtime_forever']
     ).interactive()
     st.altair_chart(chart2, use_container_width=True)
 
@@ -198,13 +202,18 @@ with comp_col2:
         (filtered_df['Positive Review %'] > 0)
     ]
     
-    scatter = alt.Chart(scatter_data).mark_circle(size=60, opacity=0.7).encode(
+    base_scatter = alt.Chart(scatter_data).mark_circle(size=60, opacity=0.7).encode(
         x=alt.X('metacritic_score', title='Metacritic Score', scale=alt.Scale(zero=False)),
         y=alt.Y('Positive Review %', title='Positive User Review %', scale=alt.Scale(zero=False)),
         color=alt.Color('price', title='Price'),
         tooltip=['name', 'metacritic_score', 'Positive Review %', 'price', 'num_reviews_total']
     ).interactive()
-    st.altair_chart(scatter, use_container_width=True)
+    
+    # Add quadrant lines
+    vertical_line = alt.Chart(pd.DataFrame({'x': [60]})).mark_rule(color='red', strokeDash=[5,5]).encode(x='x')
+    horizontal_line = alt.Chart(pd.DataFrame({'y': [80]})).mark_rule(color='red', strokeDash=[5,5]).encode(y='y')
+    
+    st.altair_chart(base_scatter + vertical_line + horizontal_line, use_container_width=True)
 
 # --- NEW: Narrative & Insights Section ---
 st.divider()
