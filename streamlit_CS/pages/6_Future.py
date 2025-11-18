@@ -36,9 +36,8 @@ Here are a couple of ideas I would be excited to explore:
 """")
 
 st.header("2. [Relations in reviews]")
-st.info("I would love to do a deeper dive on the words used in each review, 
-along with the sentiment review above, This could provide valuable insight on the thoughts and ideas present in reviews")
+st.info(""""I would love to do a deeper dive on the words used in each review, 
+along with the sentiment review above, This could provide valuable insight on the thoughts and ideas present in reviews"""")
 
-st.divider()
 
 
