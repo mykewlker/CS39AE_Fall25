@@ -102,16 +102,13 @@ def load_data(filepath):
 # --- Main App Execution ---
 
 # ** THE FIX: Build a robust, absolute file path **
-# This gets the directory where this script (app.py) is running
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# This joins that directory path with 'data' and 'sample.csv'
 DATA_PATH = os.path.join(BASE_DIR, 'data', 'sample.csv')
 
 # Load the data using the robust path
 df = load_data(DATA_PATH)
 
 # Store the loaded data in Streamlit's session state
-# This allows all other pages (in the 'pages' folder) to access the same data
 if not df.empty:
     st.session_state['df'] = df
     
@@ -122,10 +119,7 @@ if not df.empty:
         st.session_state['data_last_refreshed'] = mod_time
     except FileNotFoundError:
         st.session_state['data_last_refreshed'] = "N/A (File not found)"
-    # --- END NEW ---
-
 else:
-    # If loading failed, store an empty DF to prevent KeyErrors on other pages
     st.session_state['df'] = pd.DataFrame()
 
 
@@ -141,8 +135,8 @@ col_img, col_text = st.columns([1, 2.5])
 
 with col_img:
     st.image(
-        "https://placehold.co/400x250/2E86C1/FFFFFF?text=Data+Exploration", 
-        caption="Exploring the World of Gaming Data",
+        "https://placehold.co/400x250/2E86C1/FFFFFF?text=Controller\nImage", 
+        caption="Analyzing the Gaming Market",
         use_column_width=True
     )
 
@@ -151,8 +145,10 @@ with col_text:
     st.markdown("""
     This application serves as a **professional portfolio** and an interactive **mini analytics product**. 
     
-    It showcases my ability to clean data, perform exploratory analysis, and deploy 
-    interactive dashboards using Python, Pandas, and Streamlit.
+    It showcases my ability to clean raw data, perform exploratory analysis, and deploy 
+    interactive dashboards using Python, Pandas, and Streamlit. The analysis focuses 
+    on the relationships between price, user reception, playtime, and game category 
+    across the vast Steam game library.
     
     Use the sidebar to navigate to my **Professional Bio**, the **EDA Gallery**, or the 
     live **Interactive Dashboard** to explore the dataset yourself.
@@ -160,15 +156,60 @@ with col_text:
 
 st.divider()
 
-st.header("Project Overview")
+# --- NEW SECTION: Quick Data Highlights ---
+st.header("Quick Data Highlights")
 
-st.info("""
-**Data & Technology:** This project analyzes a sample of **2000 Steam games**. 
-The entire application, including data processing and visualization, is built with 
-**Python**, **Streamlit**, **Pandas**, and **Altair**.
-""")
+if not df.empty:
+    # Calculate metrics for the highlights
+    total_games = len(df)
+    max_price = df['price'].max()
+    avg_metacritic = df[df['metacritic_score'] > 0]['metacritic_score'].mean()
+    total_owners = df['owners_lower_bound'].sum()
+    
+    # Get the single most common genre
+    try:
+        # Explode list of genres, count, and get the mode (most frequent)
+        common_genre = df.explode('genres_list')['genres_list'].mode()[0]
+    except Exception:
+        common_genre = "Action" # Default fallback
+    
+    highlight_col1, highlight_col2, highlight_col3, highlight_col4 = st.columns(4)
+    
+    with highlight_col1:
+        st.metric(label="Total Games Analyzed", value=f"{total_games:,}")
+    
+    with highlight_col2:
+        st.metric(label="Maximum Game Price", value=f"${max_price:,.2f}")
+    
+    with highlight_col3:
+        st.metric(label="Total Estimated Owners (Lower)", value=f"{total_owners:,}")
 
-# Add a status box to the home page for easy debugging
+    with highlight_col4:
+        st.metric(label="Most Common Genre", value=common_genre)
+else:
+    st.warning("Data highlights are unavailable because the 'sample.csv' file failed to load.")
+
+st.divider()
+
+# --- NEW SECTION: Technology Stack ---
+st.header("Technology Stack")
+
+st.markdown(
+    """
+    This project was built from the ground up using the following tools, demonstrating proficiency 
+    in core data science and application development principles:
+    
+    * **Python:** The core programming language for the entire application.
+    * **Pandas:** Used exclusively for **data ingestion, cleaning, transformation, and feature engineering** (e.g., parsing genres, calculating playtime-per-dollar).
+    * **Altair:** Utilized for all **data visualizations** across the EDA Gallery and Dashboard, ensuring interactive and responsive charts.
+    * **Streamlit:** The framework used to **deploy the application**, manage the multi-page structure, and create all interactive widgets (sliders, multiselects).
+    """
+)
+
+st.divider()
+
+# Final status box
+st.header("Project Status")
 if df.empty:
     st.error("Data loading failed. See error message above. The other pages will not work until this is resolved.")
 else:
