@@ -14,16 +14,8 @@ This project provides a strong foundation for further analysis. Below are two
 potential directions I would pursue next.
 """)
 
-st.header("1. TBD: [Future Work Idea 1]")
-st.info("ℹ️ **Placeholder:** The body of this section is to be determined (TBD).")
-
-st.header("2. TBD: [Future Work Idea 2]")
-st.info("ℹ️ **Placeholder:** The body of this section is to be determined (TBD).")
-
-st.divider()
-
-st.subheader("My Suggestions for Future Work:")
-st.markdown("""
+st.header("1. [Expand on current system]")
+st.info(""""
 Here are a couple of ideas I would be excited to explore:
 
 * **1. Sentiment Analysis on User Reviews:**
@@ -41,4 +33,12 @@ Here are a couple of ideas I would be excited to explore:
     could include `price`, `genre`, `dlc_count`, and whether it's 
     `Single-player` or `Multi-player`. This could help publishers understand 
     what factors are most predictive of a successful launch.
-""")
+"""")
+
+st.header("2. [Relations in reviews]")
+st.info("I would love to do a deeper dive on the words used in each review, 
+along with the sentiment review above, This could provide valuable insight on the thoughts and ideas present in reviews")
+
+st.divider()
+
+
