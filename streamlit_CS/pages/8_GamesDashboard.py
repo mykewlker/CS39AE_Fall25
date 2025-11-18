@@ -140,7 +140,7 @@ with col4:
     total_owners = filtered_df['owners_lower_bound'].sum()
     st.metric(label="Total Owners (Lower Bound)", value=f"{total_owners:,}")
 
-# Middle Row: Charts
+# Row 2: Top 10 Charts
 st.divider()
 st.header("Top 10 Games")
 chart_col1, chart_col2 = st.columns(2)
@@ -168,6 +168,41 @@ with chart_col2:
         tooltip=['name', 'owners_lower_bound', 'price']
     ).interactive()
     st.altair_chart(chart2, use_container_width=True)
+
+# Row 3: Composition & Platforms (New Section)
+st.divider()
+st.header("Composition & Platforms")
+comp_col1, comp_col2 = st.columns(2)
+
+with comp_col1:
+    st.subheader("Genre Distribution (Top 10)")
+    # Explode genres to count them individually
+    genre_counts = filtered_df.explode('genres_list')['genres_list'].value_counts().reset_index()
+    genre_counts.columns = ['Genre', 'Count']
+    
+    # Donut Chart
+    donut = alt.Chart(genre_counts.head(10)).mark_arc(innerRadius=50).encode(
+        theta=alt.Theta(field="Count", type="quantitative"),
+        color=alt.Color(field="Genre", type="nominal"),
+        order=alt.Order("Count", sort="descending"),
+        tooltip=['Genre', 'Count']
+    ).interactive()
+    st.altair_chart(donut, use_container_width=True)
+
+with comp_col2:
+    st.subheader("Platform Support")
+    # Sum the boolean columns
+    platform_data = filtered_df[['windows', 'mac', 'linux']].sum().reset_index()
+    platform_data.columns = ['Platform', 'Count']
+    
+    # Bar Chart
+    platform_chart = alt.Chart(platform_data).mark_bar().encode(
+        x=alt.X('Platform:N', sort='-y'),
+        y=alt.Y('Count:Q'),
+        color='Platform:N',
+        tooltip=['Platform', 'Count']
+    ).interactive()
+    st.altair_chart(platform_chart, use_container_width=True)
 
 # --- NEW: Narrative & Insights Section ---
 st.divider()
