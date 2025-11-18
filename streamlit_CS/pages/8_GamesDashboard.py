@@ -53,13 +53,16 @@ score_range = st.sidebar.slider(
     value=(0, 100)
 )
 
-# 4. Minimum Number of Reviews Filter
-max_reviews = int(df['num_reviews_total'].max())
-min_reviews = st.sidebar.slider(
-    'Minimum Number of Reviews:',
+# 4. Minimum Owners Filter (in 1000s)
+max_owners = int(df['owners_lower_bound'].max())
+# Calculate max in terms of thousands for the slider upper bound (ensure at least 1)
+max_owners_k = max(1, max_owners // 1000)
+
+min_owners_k = st.sidebar.slider(
+    'Minimum Owners (1000s):',
     min_value=0,
-    max_value=max_reviews,
-    value=100  # Default to a minimum of 100 reviews
+    max_value=max_owners_k,
+    value=0  # Default to 0 (show all)
 )
 
 # 5. Game Type Filter
@@ -100,7 +103,7 @@ filtered_df = filtered_df[
     (filtered_df['price'] <= price_range[1]) &
     (filtered_df['metacritic_score'] >= score_range[0]) &
     (filtered_df['metacritic_score'] <= score_range[1]) &
-    (filtered_df['num_reviews_total'] >= min_reviews)
+    (filtered_df['owners_lower_bound'] >= (min_owners_k * 1000)) # Updated filter logic
 ]
 
 if selected_game_types:
