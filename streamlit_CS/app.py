@@ -56,6 +56,18 @@ def load_data(filepath):
     df['average_playtime_forever'] = df['average_playtime_forever'].fillna(0)
     # --- END FIX ---
     
+    # --- FIX: Platform Columns ---
+    # Ensure windows, mac, linux are numeric (0 or 1) to allow summing.
+    # This handles cases where they might be read as strings "True"/"False".
+    for col in ['windows', 'mac', 'linux']:
+        # Check if column exists
+        if col in df.columns:
+            # Map string/bool values to 1 and 0
+            val_map = {'True': 1, 'true': 1, 'False': 0, 'false': 0}
+            # Convert to string first to handle mixed types safely, then map
+            df[col] = df[col].astype(str).map(val_map).fillna(0).astype(int)
+    # --- END FIX ---
+    
     # --- FIX ---
     # Convert 'price' to a numeric type. 
     # errors='coerce' will turn any non-numeric strings (like "Free") into NaN
