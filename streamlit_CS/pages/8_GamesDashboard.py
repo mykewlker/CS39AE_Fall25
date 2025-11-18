@@ -169,9 +169,9 @@ with chart_col2:
     ).interactive()
     st.altair_chart(chart2, use_container_width=True)
 
-# Row 3: Composition & Platforms (New Section)
+# Row 3: Composition & Relation (New Section)
 st.divider()
-st.header("Composition & Platforms")
+st.header("Composition & Relation")
 comp_col1, comp_col2 = st.columns(2)
 
 with comp_col1:
@@ -190,19 +190,21 @@ with comp_col1:
     st.altair_chart(donut, use_container_width=True)
 
 with comp_col2:
-    st.subheader("Platform Support")
-    # Sum the boolean columns
-    platform_data = filtered_df[['windows', 'mac', 'linux']].sum().reset_index()
-    platform_data.columns = ['Platform', 'Count']
+    st.subheader("User Reviews vs. Metacritic Score")
+    # Scatter Plot (Replaces Platform Support)
+    # We filter out 0 scores for a cleaner chart
+    scatter_data = filtered_df[
+        (filtered_df['metacritic_score'] > 0) & 
+        (filtered_df['Positive Review %'] > 0)
+    ]
     
-    # Bar Chart
-    platform_chart = alt.Chart(platform_data).mark_bar().encode(
-        x=alt.X('Platform:N', sort='-y'),
-        y=alt.Y('Count:Q'),
-        color='Platform:N',
-        tooltip=['Platform', 'Count']
+    scatter = alt.Chart(scatter_data).mark_circle(size=60, opacity=0.7).encode(
+        x=alt.X('metacritic_score', title='Metacritic Score', scale=alt.Scale(zero=False)),
+        y=alt.Y('Positive Review %', title='Positive User Review %', scale=alt.Scale(zero=False)),
+        color=alt.Color('price', title='Price'),
+        tooltip=['name', 'metacritic_score', 'Positive Review %', 'price', 'num_reviews_total']
     ).interactive()
-    st.altair_chart(platform_chart, use_container_width=True)
+    st.altair_chart(scatter, use_container_width=True)
 
 # --- NEW: Narrative & Insights Section ---
 st.divider()
