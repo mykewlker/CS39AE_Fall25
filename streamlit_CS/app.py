@@ -135,7 +135,7 @@ col_img, col_text = st.columns([1, 2.5])
 
 with col_img:
     st.image(
-        "https://placehold.co/400x250/2E86C1/FFFFFF?text=Controller\nImage", 
+        "https://www.computerhope.com/jargon/g/gamepad.png", 
         caption="Analyzing the Gaming Market",
         use_column_width=True
     )
