@@ -1,12 +1,9 @@
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
-import pandas as pd # <-- REQUIRED for the labeled table
+import pandas as pd 
 
 # --- PAGE CONFIGURATION ---
-# Note: st.set_page_config() should only be used once in the main app file (streamlit_app.py)
-# but we can set the title here.
-
 st.title("👥 Network Analysis Dashboard")
 st.markdown("This page visualizes the friendship network, colored by community, and labeled by the number of connections (degree).")
 
@@ -45,8 +42,6 @@ def create_and_analyze_graph():
     
     # 3. Degree Calculation and Custom Labels
     node_degrees = dict(G.degree()) 
-
-    # Custom label includes name and degree, separated by a newline
     custom_labels = {node: f"{node}\n({degree})" for node, degree in node_degrees.items()} 
     
     most_connected_node = max(node_degrees, key=node_degrees.get)
@@ -59,8 +54,8 @@ def create_and_analyze_graph():
     # --- Drawing the Graph with Node Labels ---
     nx.draw(
         G, pos, ax=ax, 
-        labels=custom_labels,         # Custom labels dictionary
-        with_labels=True,             # Display labels
+        labels=custom_labels,         
+        with_labels=True,             
         node_size=3500, 
         node_color=colors,
         edge_color='gray', 
@@ -101,10 +96,7 @@ graph_fig, most_connected_node, max_connections, node_degrees, communities, colo
 st.success(f"**Most Connected Person:** **{most_connected_node}** with **{max_connections}** connections.")
 st.pyplot(graph_fig) 
 
----
-
-## 🔍 Detailed Analysis & Legend
-
+# --- Detailed Analysis & Legend ---
 col1, col2 = st.columns(2)
 
 with col1:
@@ -112,7 +104,7 @@ with col1:
     st.markdown("---")
     for community_name, members in communities.items():
         color = color_map[community_name]
-        # Use an HTML span for colored text in Streamlit
+        # Correctly formatted HTML markdown line
         st.markdown(
             f'<span style="color:{color}; font-weight:bold;">{community_name}</span>',
             unsafe_allow_html=True
@@ -123,14 +115,11 @@ with col2:
     st.subheader("Connection Counts (Degree)")
     st.markdown("---")
     
-    # Sort the degrees from highest to lowest
+    # Sort degrees and convert to DataFrame for labeled table
     sorted_degrees = sorted(node_degrees.items(), key=lambda item: item[1], reverse=True)
-    
-    # --- CORRECTED CODE: Convert list of tuples to a DataFrame for proper labels ---
     df_degrees = pd.DataFrame(
         sorted_degrees, 
-        columns=["Name", "Connections"] # <-- Sets the column headers for the table
+        columns=["Name", "Connections"]
     )
     
-    # Display the DataFrame as a table
     st.table(df_degrees)
