@@ -8,7 +8,7 @@ st.markdown("This page visualizes the friendship network, colored by community, 
 
 # --- CORE DATA AND ANALYSIS FUNCTION ---
 def create_and_analyze_graph():
-    # ... (Keep the exact code for G, communities, color_map, etc., here) ...
+    # 1. Graph Definition
     G = nx.Graph()
     G.add_edges_from([
         ("Alice", "Bob"), ("Alice", "Charlie"), ("Bob", "Charlie"), 
@@ -18,7 +18,8 @@ def create_and_analyze_graph():
         ("Grace", "Jack"), ("Charlie", "Frank"), ("Alice", "Eve"), 
         ("Bob", "Jack")
     ])
-    
+
+    # 2. Community and Color Mapping
     communities = {
         'Community 1': ['Charlie', 'Frank', 'Bob', 'Alice'],
         'Community 2': ['Diana', 'Eve', 'Ian'],
@@ -30,7 +31,6 @@ def create_and_analyze_graph():
         'Community 3': 'lightgreen'
     }
 
-    # ... (Rest of the analysis code) ...
     node_color_lookup = {}
     for community_name, members in communities.items():
         color = color_map[community_name]
@@ -38,20 +38,57 @@ def create_and_analyze_graph():
             node_color_lookup[member] = color
 
     colors = [node_color_lookup.get(node, 'gray') for node in G.nodes()]
+    
+    # 3. Degree Calculation and Custom Labels
     node_degrees = dict(G.degree()) 
 
-    custom_labels = {node: f"{node} ({degree})" for node, degree in node_degrees.items()}
+    custom_labels = {node: f"{node}\n({degree})" for node, degree in node_degrees.items()} # Added newline for better spacing on the node
     
     most_connected_node = max(node_degrees, key=node_degrees.get)
     max_connections = node_degrees[most_connected_node]
     
+    # 4. Plotting Setup and Drawing
     pos = nx.spring_layout(G, seed=42, k=0.8) 
     fig, ax = plt.subplots(figsize=(12, 8))
     
-    nx.draw(G, pos, ax=ax, labels=custom_labels, with_labels=True, 
-            node_size=3500, node_color=colors, edge_color='gray', 
-            font_size=10, font_weight='bold')
-    ax.set_title(f"Friend Group Network | Most Connected: {most_connected_node} ({max_connections})", fontsize=16)
+    # --- ESSENTIAL FOR NODE LABELS ---
+    nx.draw(
+        G, pos, ax=ax, 
+        labels=custom_labels,         # Custom labels dictionary
+        with_labels=True,             # MUST be True to display labels
+        node_size=3500, 
+        node_color=colors,
+        edge_color='gray', 
+        font_size=10, 
+        font_weight='bold'
+    )
+    
+    # --- ESSENTIAL FOR GRAPH TITLE & LEGEND ---
+    ax.set_title(
+        f"Friend Group Network | Most Connected: {most_connected_node} ({max_connections})", 
+        fontsize=16, 
+        pad=20 # Add padding so the title isn't too close to the graph
+    )
+
+    # Adding a simple text legend to the side of the plot for color explanation
+    legend_title = "Community Legend:"
+    legend_items = [f"• {name}" for name in color_map.keys()]
+    
+    # Position the text outside the main drawing area
+    ax.text(1.05, 0.95, legend_title, 
+            transform=ax.transAxes, fontsize=12, verticalalignment='top', 
+            fontweight='bold')
+    
+    # Draw colored lines for the legend items
+    y_start = 0.90
+    for i, (name, color) in enumerate(color_map.items()):
+        ax.plot([1.05, 1.08], [y_start - i*0.05, y_start - i*0.05], 
+                color=color, linewidth=8, transform=ax.transAxes)
+        ax.text(1.09, y_start - i*0.05, name, 
+                transform=ax.transAxes, fontsize=10, verticalalignment='center')
+        
+    # Turn off axis to clean up the plot area
+    ax.set_axis_off()
 
     return fig, most_connected_node, max_connections, node_degrees, communities, color_map
 
@@ -60,22 +97,22 @@ def create_and_analyze_graph():
 graph_fig, most_connected_node, max_connections, node_degrees, communities, color_map = create_and_analyze_graph()
 
 st.success(f"**Most Connected Person:** **{most_connected_node}** with **{max_connections}** connections.")
-st.pyplot(graph_fig)
+st.pyplot(graph_fig) # This displays the graph with labels, title, and the new Matplotlib legend
 
-# ... (Keep the rest of the display/table code) ...
+# --- Detailed Analysis (The table part) ---
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("Community Legend")
+    st.subheader("Community Members")
     st.markdown("---")
-    for community_name, color in color_map.items():
+    for community_name, members in communities.items():
+        color = color_map[community_name]
+        # Use an HTML span for colored text in Streamlit
         st.markdown(
-            f'<div style="background-color:{color}; padding: 5px; border-radius: 5px; margin-bottom: 5px;">'
-            f'**{community_name}**'
-            f'</div>', 
+            f'<span style="color:{color}; font-weight:bold;">{community_name}</span>',
             unsafe_allow_html=True
         )
-        st.write(f"Members: {', '.join(communities[community_name])}")
+        st.write(f"Members: {', '.join(members)}")
 
 with col2:
     st.subheader("Connection Counts (Degree)")
