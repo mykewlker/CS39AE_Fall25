@@ -96,30 +96,6 @@ graph_fig, most_connected_node, max_connections, node_degrees, communities, colo
 st.success(f"**Most Connected Person:** **{most_connected_node}** with **{max_connections}** connections.")
 st.pyplot(graph_fig) 
 
-st.header("💡 Network Analysis Reflection")
-st.markdown("---")
-
-st.subheader("Key Findings and Graph Description")
-
-st.markdown("""
-This analysis focused on mapping and measuring connectivity within the defined **Friend Group Network**. The resulting graph visualization, colored by **Community** and labeled by **Degree** (number of connections), revealed clear structural features and identified key individuals in the network.
-
-### Description of the Graph
-* **Structure:** The network is moderately dense but clearly separates into three distinct groups, confirming the identified community structure. While the **Community 1 (Blue)** and **Community 2 (Salmon)** nodes show heavy internal connectivity, there are critical **bridge nodes** (like Diana and Eve) linking them. **Community 3 (Green)** forms a tight-knit cluster that is connected primarily through a single link to Bob (Community 1) and Ian/Eve (Community 2).
-* **Color-Coding (Community):** Nodes are color-coded to instantly show group membership (e.g., Alice, Bob, Charlie, and Frank are in the blue group). This visual separation confirms the validity of the community detection approach.
-* **Node Labels (Degree):** Each node is labeled with the person's name and their connection count (degree). This directly addresses the goal of identifying the most connected individuals.
-
-### Interpretation of Connection Counts
-The **Connection Counts (Degree) table** and node labels identify the most central figures:
-
-1.  **Diana (Degree 4), Bob (Degree 4), Charlie (Degree 4), and Eve (Degree 4)** are the most connected individuals. This high degree suggests they are socially active or critical hubs for information flow.
-2.  **Bob** is a particularly important node as he sits in the **Community 1 (Blue)** group but is connected to **Community 2 (Salmon)** and **Community 3 (LightGreen)**
-3.  **Frank (Degree 2)** and **Hannah (Degree 2)** are the least connected members, suggesting they are on the periphery of the network.
-
-### Conclusion
-The visualization successfully highlights the underlying community structure and quantifies the social importance of each individual. The presence of high-degree nodes like **Diana** and **Bob** indicates potential single points of failure for information transmission, meaning if they were removed, the network might fragment significantly. Further analysis, such as **Betweenness Centrality**, could confirm their role as critical bridge nodes.
-""")
-
 # --- Detailed Analysis & Legend ---
 col1, col2 = st.columns(2)
 
@@ -147,3 +123,27 @@ with col2:
     )
     
     st.table(df_degrees)
+
+st.header("💡 Network Analysis Reflection")
+st.markdown("---")
+
+st.subheader("Key Findings and Graph Description")
+
+st.markdown("""
+This analysis focused on mapping and measuring connectivity within the defined **Friend Group Network**. The resulting graph visualization, colored by **Community** and labeled by **Degree** (number of connections), revealed clear structural features and identified key individuals in the network.
+
+### Description of the Graph
+* **Structure:** The network is moderately dense but clearly separates into three distinct groups, confirming the identified community structure. While the **Community 1 (Blue)** and **Community 2 (Salmon)** nodes show heavy internal connectivity, there are critical **bridge nodes** (like Diana and Eve) linking them. **Community 3 (Green)** forms a tight-knit cluster that is connected primarily through a single link to Bob (Community 1) and Ian/Eve (Community 2).
+* **Color-Coding (Community):** Nodes are color-coded to instantly show group membership (e.g., Alice, Bob, Charlie, and Frank are in the blue group). This visual separation confirms the validity of the community detection approach.
+* **Node Labels (Degree):** Each node is labeled with the person's name and their connection count (degree). This directly addresses the goal of identifying the most connected individuals.
+
+### Interpretation of Connection Counts
+The **Connection Counts (Degree) table** and node labels identify the most central figures:
+
+1.  **Diana (Degree 4), Bob (Degree 4), Charlie (Degree 4), and Eve (Degree 4)** are the most connected individuals. This high degree suggests they are socially active or critical hubs for information flow.
+2.  **Bob** is a particularly important node as he sits in the **Community 1 (Blue)** group but is connected to **Community 2 (Salmon)** and **Community 3 (LightGreen)**
+3.  **Frank (Degree 2)** and **Hannah (Degree 2)** are the least connected members, suggesting they are on the periphery of the network.
+
+### Conclusion
+The visualization successfully highlights the underlying community structure and quantifies the social importance of each individual. The presence of high-degree nodes like **Diana** and **Bob** indicates potential single points of failure for information transmission, meaning if they were removed, the network might fragment significantly. Further analysis, such as **Betweenness Centrality**, could confirm their role as critical bridge nodes.
+""")
