@@ -1,8 +1,12 @@
 import streamlit as st
 import networkx as nx
 import matplotlib.pyplot as plt
+import pandas as pd # <-- REQUIRED for the labeled table
 
-# --- PAGE TITLE AND INFO ---
+# --- PAGE CONFIGURATION ---
+# Note: st.set_page_config() should only be used once in the main app file (streamlit_app.py)
+# but we can set the title here.
+
 st.title("👥 Network Analysis Dashboard")
 st.markdown("This page visualizes the friendship network, colored by community, and labeled by the number of connections (degree).")
 
@@ -42,7 +46,8 @@ def create_and_analyze_graph():
     # 3. Degree Calculation and Custom Labels
     node_degrees = dict(G.degree()) 
 
-    custom_labels = {node: f"{node}\n({degree})" for node, degree in node_degrees.items()} # Added newline for better spacing on the node
+    # Custom label includes name and degree, separated by a newline
+    custom_labels = {node: f"{node}\n({degree})" for node, degree in node_degrees.items()} 
     
     most_connected_node = max(node_degrees, key=node_degrees.get)
     max_connections = node_degrees[most_connected_node]
@@ -51,11 +56,11 @@ def create_and_analyze_graph():
     pos = nx.spring_layout(G, seed=42, k=0.8) 
     fig, ax = plt.subplots(figsize=(12, 8))
     
-    # --- ESSENTIAL FOR NODE LABELS ---
+    # --- Drawing the Graph with Node Labels ---
     nx.draw(
         G, pos, ax=ax, 
         labels=custom_labels,         # Custom labels dictionary
-        with_labels=True,             # MUST be True to display labels
+        with_labels=True,             # Display labels
         node_size=3500, 
         node_color=colors,
         edge_color='gray', 
@@ -63,31 +68,28 @@ def create_and_analyze_graph():
         font_weight='bold'
     )
     
-    # --- ESSENTIAL FOR GRAPH TITLE & LEGEND ---
+    # --- Setting the Title ---
     ax.set_title(
         f"Friend Group Network | Most Connected: {most_connected_node} ({max_connections})", 
         fontsize=16, 
-        pad=20 # Add padding so the title isn't too close to the graph
+        pad=20
     )
 
-    # Adding a simple text legend to the side of the plot for color explanation
-    legend_title = "Community Legend:"
-    legend_items = [f"• {name}" for name in color_map.keys()]
-    
-    # Position the text outside the main drawing area
-    ax.text(1.05, 0.95, legend_title, 
+    # --- In-Figure Legend with Colors ---
+    ax.text(1.05, 0.95, "Community Legend:", 
             transform=ax.transAxes, fontsize=12, verticalalignment='top', 
             fontweight='bold')
     
-    # Draw colored lines for the legend items
     y_start = 0.90
     for i, (name, color) in enumerate(color_map.items()):
+        # Draw a small, colored line/box to represent the node color
         ax.plot([1.05, 1.08], [y_start - i*0.05, y_start - i*0.05], 
-                color=color, linewidth=8, transform=ax.transAxes)
+                color=color, linewidth=8, solid_capstyle='butt', 
+                transform=ax.transAxes)
+        # Place the community name next to the colored line
         ax.text(1.09, y_start - i*0.05, name, 
                 transform=ax.transAxes, fontsize=10, verticalalignment='center')
         
-    # Turn off axis to clean up the plot area
     ax.set_axis_off()
 
     return fig, most_connected_node, max_connections, node_degrees, communities, color_map
@@ -97,9 +99,12 @@ def create_and_analyze_graph():
 graph_fig, most_connected_node, max_connections, node_degrees, communities, color_map = create_and_analyze_graph()
 
 st.success(f"**Most Connected Person:** **{most_connected_node}** with **{max_connections}** connections.")
-st.pyplot(graph_fig) # This displays the graph with labels, title, and the new Matplotlib legend
+st.pyplot(graph_fig) 
 
-# --- Detailed Analysis (The table part) ---
+---
+
+## 🔍 Detailed Analysis & Legend
+
 col1, col2 = st.columns(2)
 
 with col1:
@@ -117,5 +122,15 @@ with col1:
 with col2:
     st.subheader("Connection Counts (Degree)")
     st.markdown("---")
+    
+    # Sort the degrees from highest to lowest
     sorted_degrees = sorted(node_degrees.items(), key=lambda item: item[1], reverse=True)
-    st.table(sorted_degrees)
+    
+    # --- CORRECTED CODE: Convert list of tuples to a DataFrame for proper labels ---
+    df_degrees = pd.DataFrame(
+        sorted_degrees, 
+        columns=["Name", "Connections"] # <-- Sets the column headers for the table
+    )
+    
+    # Display the DataFrame as a table
+    st.table(df_degrees)
